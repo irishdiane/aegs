@@ -1,0 +1,4 @@
+node_modules
+flask-server/data/word2vec/word2vec_prepared.kv
+flask-server/data/word2vec/word2vec_prepared.kv.vectors.npy
+flask-server/data/word2vec/GoogleNews-vectors-negative300.bin
