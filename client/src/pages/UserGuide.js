@@ -75,7 +75,8 @@ export default function UserGuide() {
             key: "how-to-create-csv",
             question: "How to create a CSV file?",
             answer: [
-                "To create a CSV file with column headers like `essay_id`, start by opening a spreadsheet program such as Excel or Google Sheets. Enter your headers in the first row (e.g., `essay_id`, `student_name`, `score`), then add your data below. Save or export the file as a CSV- in Excel, choose Save As and select CSV (Comma delimited), or in Google Sheets, go to File > Download > Comma-separated values (.csv).",
+                "To create a CSV file with column headers like `essay_id`, start by opening a spreadsheet program such as Excel or Google Sheets. Enter your headers in the first row (e.g., `essay_id`, `prompt`, `essay_text`), then add your data below.",
+                "Save or export the file as a CSV- in Excel, choose Save As and select CSV (Comma delimited), or in Google Sheets, go to File > Download > Comma-separated values (.csv).",
                 "The resulting file will contain your data separated by commas, ready for use in other applications."
             ]
         },
