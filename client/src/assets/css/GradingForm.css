@@ -17,6 +17,7 @@
 
 .flex-row {
   flex-direction: row;
+  
 }
 
 .min-h-screen {
@@ -608,20 +609,6 @@
   font-weight: bold;
 }
 
-.success-popup,
-.file-uploaded-message {
-  position: fixed;
-  top: 20px;
-  left: 50%;
-  padding: 10px 20px;
-  border-radius: 5px;
-  font-weight: bold;
-  text-align: center;
-  z-index: 1100;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  animation: fadeInOut 3s ease;
-}
-
 .success-popup {
   background-color: #449b40;
   color: white;
@@ -632,22 +619,37 @@
   color: white;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+.success-popup,
+.file-uploaded-message {
+  position: fixed;
+  margin-top: 3vh;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1100;
+  padding: 18px 36px;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.20);
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-align: center;
+  min-width: 200px;
+  max-width: 90vw;
+  transition: opacity 0.3s;
+  opacity: 1;
 }
 
-@keyframes fadeOut {
-  from { opacity: 1; }
-  to { opacity: 0; }
+.success-popup.fade-in-out,
+.file-uploaded-message.fade-in-out {
+  animation: fadeInOut 2.5s;
 }
 
 @keyframes fadeInOut {
-  0% { opacity: 0; transform: translateY(-20px); }
-  10% { opacity: 1; transform: translateY(0); }
-  90% { opacity: 1; transform: translateY(0); }
-  100% { opacity: 0; transform: translateY(-20px); }
+  0% { opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { opacity: 0; }
 }
+
 
 .fade-in-out {
   animation: fadeInOut 3s ease;

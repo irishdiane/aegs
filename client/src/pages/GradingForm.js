@@ -121,6 +121,21 @@ function GradingForm() {
   // Handle weight change
   const handleWeightChange = (criterionId, value) => {
     if (settingsApplied) return;
+    // Parse input value, default to 0 if not a number
+  const newValue = parseInt(value, 10) || 0;
+
+  // Calculate what the new total would be if this change is applied
+  const currentTotal = Object.entries(weights).reduce(
+    (sum, [id, w]) => sum + (id === criterionId ? 0 : (parseInt(w, 10) || 0)),
+    0
+  );
+  const newTotal = currentTotal + newValue;
+
+  // If new total would be more than 100, block and show warning
+  if (newTotal > 100) {
+    setWeightWarningVisible(true);
+    return; // Block the change
+  }
     setWeights(prev => ({
       ...prev,
       [criterionId]: parseInt(value, 10) || 1

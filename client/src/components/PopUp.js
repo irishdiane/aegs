@@ -97,13 +97,13 @@ const PopUp = ({
           <div className="modal-container">
             <div className="modal-header">
               <img src="/img/navbar-logo.png" alt="Logo" style={{ height: "50px", width: "70px" }} className="mr-2" />
-              <span className="modal-title">Warning</span>
+              <span className="modal-title">Oops!</span>
               <span className="close" onClick={handleClose}>X</span>
             </div>
             <div className="modal-body">
               <p>Total weights must equal exactly 100%.</p>
               <p>Please adjust your rubric weights.</p>
-              <div className="checkbox-wrapper-13" style={{ marginTop: '10px', color: 'black', display: 'flex', alignItems: 'center' }}>
+              <div className="checkbox-wrapper-13" style={{ marginTop: '5vh', marginBottom: '1vh', color: 'black', display: 'flex', alignItems: 'center' }}>
                 <input
                   id="dont-show-again-weight-warning"
                   type="checkbox"
