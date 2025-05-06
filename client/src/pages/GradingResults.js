@@ -100,11 +100,11 @@ const renderCsvSummary = () => {
       <div className="score-card">
         <div className="stats-container">
           <div className="stat-box">
-            <div className="stat-value">{results.total_essays || 0}</div>
+            <div className="stat-value">{results.essays_evaluated || 0}</div>
             <div className="stat-label">Number of Essays</div>
           </div>
           <div className="stat-box">
-            <div className="stat-value">{results.total_essays || 0}</div>
+            <div className="stat-value">{results.essays_evaluated || 0}</div>
             <div className="stat-label">Number of Graded Essays</div>
           </div>
         </div>

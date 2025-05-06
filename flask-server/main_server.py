@@ -7,7 +7,6 @@ import json
 import traceback
 from preprocessor.word2vec_singleton import get_word2vec_model
 
-# Import evaluators (these imports will depend on your actual file structure)
 try:
     from evaluators.grammar import GrammarEvaluator
     from evaluators.ideas import IdeasEvaluator
@@ -72,13 +71,13 @@ class EssayEvaluationSystem:
         self.word2vec_model = get_word2vec_model()
         
         # Initialize evaluators with the shared model
-        self.grammar_evaluator = GrammarEvaluator
+        self.grammar_evaluator = GrammarEvaluator()
         self.ideas_evaluator = IdeasEvaluator(word2vec_model=self.word2vec_model)
         self.organization_evaluator = OrganizationEvaluator(word2vec_model=self.word2vec_model)
         self.evidence_evaluator = EvidenceEvaluator(word2vec_model=self.word2vec_model)
         self.language_tone_evaluator = LanguageToneEvaluator(word2vec_model=self.word2vec_model)
         self.vocabulary_evaluator = VocabularyEvaluator(word2vec_model=self.word2vec_model)
-        self.mechanics_evaluator = MechanicsFuzzyEvaluator
+        self.mechanics_evaluator = MechanicsEvaluator()
 
         # Initialize fuzzy evaluators
         self.grammar_fuzzy = GrammarFuzzyEvaluator()
@@ -99,7 +98,6 @@ class EssayEvaluationSystem:
         self.scale_choice = "5"  # Default to 100-point scale
 
     def call_evaluator(self, evaluator, method_name, essay_text, prompt):
-        """Call evaluator methods dynamically based on their parameter count"""
         method = getattr(evaluator, method_name)
         
         try:
@@ -124,7 +122,6 @@ class EssayEvaluationSystem:
                     return 0.5  # Default score
         
     def get_scale_name(self, scale_choice):
-        """Get the name of the selected scale"""
         scale_names = {
             "1": "5-point scale",
             "2": "20-point scale",
@@ -136,7 +133,6 @@ class EssayEvaluationSystem:
         return scale_names.get(scale_choice, "Unknown scale")
     
     def convert_to_scale(self, fuzzy_score, scale_choice):
-        """Convert fuzzy score to the selected scale"""
         # Ensure fuzzy_score is within [0, 1] range
         fuzzy_score = max(0, min(fuzzy_score, 1))
         
@@ -263,15 +259,6 @@ class EssayEvaluationSystem:
                 'fuzzy_mechanics': fuzzy_mechanics
             }
             
-            # Calculate overall score - if results_processor has the method, use it
-            try:
-                overall_score = self.results_processor.calculate_weighted_score(raw_scores)
-                fuzzy_overall = self.results_processor.calculate_weighted_score(fuzzy_scores)
-            except AttributeError:
-                # Calculate manually if method doesn't exist
-                overall_score = sum(raw_scores.values()) / len(raw_scores)
-                fuzzy_overall = sum(fuzzy_scores.values()) / len(fuzzy_scores)
-            
             # If we have criteria and weights, override the overall fuzzy score
             if self.criteria and self.weights:
                 fuzzy_weighted_score = 0
@@ -284,9 +271,7 @@ class EssayEvaluationSystem:
             # Combine all results
             result = {
                 **raw_scores,
-                **fuzzy_scores,
-                'overall_score': overall_score,
-                'fuzzy_overall': fuzzy_overall
+                **fuzzy_scores
             }
             
             return result
@@ -311,84 +296,79 @@ class EssayEvaluationSystem:
                 'fuzzy_language_tone': 0.5,
                 'fuzzy_vocabulary': 0.5,
                 'fuzzy_mechanics': 0.5,
-                'overall_score': 0.5,
-                'fuzzy_overall': 0.5
             }
             
-def process_csv_file(self, file_path):
-    """Process a CSV file containing essays and prompts"""
-    # Check if file exists
-    if not os.path.exists(file_path):
-        return {"error": f"File {file_path} not found"}
+    def process_csv_file(self, file_path):
+        print("reached")
+        # Check if file exists
+        if not os.path.exists(file_path):
+            return {"error": f"File {file_path} not found"}
 
-    try:
-        # Use the InputProcessor to read and validate the CSV
-        essays = self.input_processor.batch_process_csv(file_path)
+        try:
+            # Use the InputProcessor to read and validate the CSV
+            essays = self.input_processor.batch_process_csv(file_path)
 
-        if not essays:
-            return {"error": "CSV file is empty or invalid"}
+            if not essays:
+                return {"error": "CSV file is empty or invalid"}
 
-        # Prepare an output dataframe
-        results = []
+            # Prepare an output dataframe
+            results = []
 
-        for essay in essays:
-            essay_id, essay_text, prompt = self.input_processor.prepare_for_evaluation(essay)
+            for essay in essays:
+                essay_id, essay_text, prompt = self.input_processor.prepare_for_evaluation(essay)
 
-            # Evaluate the essay
-            evaluation_result = self.evaluate_essay(essay_text, prompt)
+                # Evaluate the essay
+                evaluation_result = self.evaluate_essay(essay_text, prompt)
 
-            # Filter and calculate fuzzy weighted score
-            filtered_results = {}
-            fuzzy_weighted_score = 0
+                # Calculate fuzzy weighted score - only using selected criteria
+                fuzzy_weighted_score = 0
+                for criterion in self.criteria:
+                    fuzzy_key = f"fuzzy_{criterion}"
+                    if fuzzy_key in evaluation_result and criterion in self.weights:
+                        fuzzy_weighted_score += evaluation_result.get(fuzzy_key, 0) * (self.weights[criterion] / 100)
 
-            for criterion in self.criteria:
-                if criterion in evaluation_result:
-                    fuzzy_score = evaluation_result.get(f"fuzzy_{criterion}", 0.01)
-                    filtered_results[criterion] = evaluation_result[criterion]
-                    filtered_results[f"fuzzy_{criterion}"] = fuzzy_score
-                    fuzzy_weighted_score += fuzzy_score * (self.weights.get(criterion, 0) / 100)
+                # Start with basic essay information
+                output_row = {
+                    "essay_id": essay_id,
+                    "essay_text": essay_text,
+                    "prompt": prompt,
+                }
+                
+                # Add only the criteria from the selected rubric
+                for criterion in self.criteria:
+                    fuzzy_key = f"fuzzy_{criterion}"
+                    output_row[fuzzy_key] = evaluation_result.get(fuzzy_key, 0)
 
-            # Collect all scores and outputs
-            output_row = {
-                "essay_id": essay_id,
-                "essay_text": essay_text,
-                "prompt": prompt,
-                "fuzzy_weighted_score": fuzzy_weighted_score,
-                "final_score": self.convert_to_scale(fuzzy_weighted_score, self.scale_choice),
-                "converted_fuzzy_overall": self.convert_to_scale(evaluation_result.get("fuzzy_overall", 0), self.scale_choice),
-                **evaluation_result
+                # Add multiple scaled scores
+                scale_names = {
+                    "1": "5_point_score",
+                    "2": "20_point_score",
+                    "3": "letter_grade",
+                    "4": "letter_grade_pm",
+                    "5": "100_point_score",
+                    "6": "50_point_score"
+                }
+
+                for scale_id, col_name in scale_names.items():
+                    output_row[col_name] = self.convert_to_scale(fuzzy_weighted_score, scale_id)
+
+                results.append(output_row)
+
+            # Convert results to DataFrame and save
+            df_output = pd.DataFrame(results)
+            output_path = os.path.splitext(file_path)[0] + "_scored.csv"
+            df_output.to_csv(output_path, index=False)
+
+            return {
+                "input_file": file_path,
+                "output_file": output_path,
+                "essays_evaluated": len(df_output),
+                "rubric_type": self.rubric_choice,
+                "criteria": self.criteria,
+                "weights": self.weights,
+                "scale_type": self.scale_choice
             }
 
-            # Add multiple scaled scores
-            scale_names = {
-                "1": "5_point_score",
-                "2": "20_point_score",
-                "3": "letter_grade",
-                "4": "letter_grade_pm",
-                "5": "100_point_score",
-                "6": "50_point_score"
-            }
-
-            for scale_id, col_name in scale_names.items():
-                output_row[col_name] = self.convert_to_scale(fuzzy_weighted_score, scale_id)
-
-            results.append(output_row)
-
-        # Convert results to DataFrame and save
-        df_output = pd.DataFrame(results)
-        output_path = os.path.splitext(file_path)[0] + "_scored.csv"
-        df_output.to_csv(output_path, index=False)
-
-        return {
-            "input_file": file_path,
-            "output_file": output_path,
-            "essays_evaluated": len(df_output),
-            "rubric_type": self.rubric_choice,
-            "criteria": self.criteria,
-            "weights": self.weights,
-            "scale_type": self.scale_choice
-        }
-
-    except Exception as e:
-        traceback.print_exc()
-        return {"error": f"Error processing CSV file: {str(e)}"}
+        except Exception as e:
+            traceback.print_exc()
+            return {"error": f"Error processing CSV file: {str(e)}"}

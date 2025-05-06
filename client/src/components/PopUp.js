@@ -151,12 +151,31 @@ const PopUp = ({
         </div>
       )}
 
+-      {type === 'grading-csv' && (
+        <div className="overlay">
+          <div className="modal-container">
+            <div className="modal-header">
+              <img src="/img/navbar-logo.png" alt="Logo" style={{ height: "50px", width: "70px" }} className="mr-2" />
+              <span className="modal-title">Grading your essays.</span>
+              <span className="close" onClick={onClose}>X</span>
+            </div>
+            <div className="modal-body">
+              <p>Grading essay</p>               
+              <p>out of</p> {/* before here should be the number of essay graded */}
+              <p>essays.</p> {/* before here should be the total number of essays */}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Success notification */}
       {type === 'success' && (
         <div className="success-popup fade-in-out">
           {message}
         </div>
       )}
 
+      {/* File upload notification */}
       {type === 'file-uploaded' && (
         <div className="file-uploaded-message fade-in-out">
           {message}

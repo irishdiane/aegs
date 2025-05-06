@@ -11,7 +11,7 @@ const RUBRICS = {
     { id: 'ideas', name: 'Ideas and Analysis' },   
     { id: 'evidence', name: 'Development and Support' }, 
     { id: 'organization', name: 'Organization' },
-    { id: 'vocabulary', name: 'Language Use' },
+    { id: 'language_tone', name: 'Language Use' },
   ],
   2: [
     { id: 'ideas', name: 'Depth of Reflection' },
@@ -291,17 +291,24 @@ function GradingForm() {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'scored_essays.csv';
+        a.download = `graded_${csvFile.name}`;
         localStorage.setItem('gradingResults', JSON.stringify({ type: 'csv'}));
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
-        
+        setTimeout(() => {
+          navigate('/home');
+        }, 6000);
+
         setGradingComplete(true);
         setLoadingVisible(false);
         setSuccessMessage('CSV processing complete! The scored file has been downloaded.');
         setSuccessVisible(true);
+        setTimeout(() => {
+          setSuccessMessage('Grading complete! You will now be redirected to Home tab.');
+          setSuccessVisible(true);
+        }, 5000);
       }
     } catch (error) {
       console.error('Error during grading:', error);
@@ -515,13 +522,15 @@ function GradingForm() {
           {isGrading ? 'Grading...' : 'Start Grading'}
         </button>
         
+        {inputMethod === 'text' && (
         <button 
-          className={`button secondary ${!gradingComplete ? 'disabled' : ''}`} 
-          onClick={viewResults} 
-          disabled={!gradingComplete}
-        >
-          View Results
+            className={`button secondary ${!gradingComplete ? 'disabled' : ''}`} 
+            onClick={viewResults} 
+            disabled={!gradingComplete}
+          >
+            View Results
         </button>
+        )}
       </div>
     </div>
   );

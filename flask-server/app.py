@@ -30,6 +30,7 @@ def allowed_file(filename):
 
 @app.route('/api/evaluate/text', methods=['POST'])
 def evaluate_text():
+    print("Reached /grade route")
     """Endpoint for evaluating a single essay"""
     try:
         # Parse request data
@@ -52,7 +53,7 @@ def evaluate_text():
             
         # Set criteria based on rubric choice
         if system.rubric_choice == "1":
-            system.criteria = ["ideas", "evidence", "organization", "vocabulary"]
+            system.criteria = ["ideas", "evidence", "organization", "language_tone"]
         elif system.rubric_choice == "2":
             system.criteria = ["ideas", "evidence", "language_tone", "grammar"]
         else:  # rubric_choice == "3"
@@ -85,7 +86,6 @@ def evaluate_text():
         response = {
             'overall_score': result.get('fuzzy_overall', 0),
             'criteria_scores': {criterion: result.get(f'fuzzy_{criterion}', 0) for criterion in system.criteria},
-            'feedback': "Essay evaluated successfully. Here is a breakdown of your scores.",
             'scale_type': system.scale_choice,
             'final_score': system.convert_to_scale(result.get('fuzzy_overall', 0), system.scale_choice)
         }
@@ -138,7 +138,7 @@ def upload_file():
         
         # Set criteria based on rubric choice
         if system.rubric_choice == "1":
-            system.criteria = ["ideas", "evidence", "organization", "vocabulary"]
+            system.criteria = ["ideas", "evidence", "organization", "language_tone"]
         elif system.rubric_choice == "2":
             system.criteria = ["ideas", "evidence", "language_tone", "grammar"]
         else:  # rubric_choice == "3"
@@ -160,41 +160,20 @@ def upload_file():
         essays = InputProcessor.batch_process_csv(filepath)
 
         # Evaluate each essay and store the results
-        results = []
-        for essay in essays:
-            essay_id, essay_text, prompt = InputProcessor.prepare_for_evaluation(essay)
-            result = system.evaluate_essay(essay_text, prompt)
-            
-            # Collect the scores for each criterion and the overall score
-            score_data = {
-                'essay_id': essay_id,
-                'essay_text': essay_text,
-                'prompt': prompt
-            }
-            
-            # Append the individual criterion scores
-            for criterion in system.criteria:
-                score_data[f'{criterion}_score'] = result.get(criterion, 0)  # Default to 0 if the score is not available
-            
-            # Calculate the overall score (this might be 'fuzzy_overall' or another key in the result)
-            overall_score = system.convert_to_scale(result.get('fuzzy_overall', 0), system.scale_choice)
-            score_data['overall_score'] = overall_score
-            
-            results.append(score_data)
+        result = system.process_csv_file(filepath)
 
-        # Save the results to a new CSV file
-        output_filename = os.path.splitext(filename)[0] + "_scored.csv"
-        output_filepath = os.path.join(app.config['UPLOAD_FOLDER'], output_filename)
-        
-        # Convert the results into a DataFrame
-        results_df = pd.DataFrame(results)
-        results_df.to_csv(output_filepath, index=False)
-        
+        if "error" in result:
+            return jsonify({"error": result["error"]}), 500
+
+        # The output file is already created by process_csv_file
+        output_filepath = result["output_file"]
+        output_filename = os.path.basename(output_filepath)
+
         # Return the file for download
         return send_file(output_filepath, 
-                         mimetype='text/csv',
-                         download_name=output_filename,
-                         as_attachment=True)
+                        mimetype='text/csv',
+                        download_name=output_filename,
+                        as_attachment=True)
 
     except Exception as e:
         traceback.print_exc()
@@ -251,10 +230,7 @@ def fuzzy_graph(criterion):
         evaluator_class = mapping[criterion]
         evaluator = evaluator_class()
         
-        # We need to access the code that defines the membership functions
-        # Looking at your example, we need to recreate the antecedent variable
-        # and get its membership functions
-        
+        # We need to access the code that defines the membership functions        
         # Create a temporary evaluator to extract membership functions
         # This ensures we get a fresh implementation with all variables defined
         temp_evaluator = evaluator_class()
@@ -266,7 +242,7 @@ def fuzzy_graph(criterion):
         # The score is on a 0 to 1 scale with 0.01 increments
         score_universe = np.arange(0, 1.1, 0.01)
         
-        # Now extract the rules from the control system
+        # Extract the rules from the control system
         # Since we can't directly access the variables, we'll recreate the membership functions
         # by inspecting how the _create_control_system method is implemented
         
@@ -278,7 +254,6 @@ def fuzzy_graph(criterion):
         score_mfs = {}
         category_mfs = {}
         
-        # Look for trapezoid membership function definitions
         import re
         
         # Find and extract score membership functions
@@ -394,12 +369,10 @@ def fuzzy_graph(criterion):
     
 @app.route('/')
 def index():
-    """Serve the frontend application"""
     return send_file('../build/index.html')
 
 @app.route('/<path:path>')
 def static_files(path):
-    """Serve static files from the build directory"""
     return send_file(f'../build/{path}')
 
 if __name__ == '__main__':
