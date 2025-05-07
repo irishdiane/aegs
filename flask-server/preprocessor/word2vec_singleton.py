@@ -2,6 +2,7 @@ import os
 import gensim
 import requests
 import zipfile
+import shutil
 
 class Word2VecSingleton:
     _instance = None
@@ -17,7 +18,7 @@ class Word2VecSingleton:
     def load_model(self):
         bin_path = "flask-server/data/word2vec/GoogleNews-vectors-negative300.bin"
         kv_path = "flask-server/data/word2vec/word2vec_prepared.kv"
-        zip_path = "flask-server/data/word2vec/GoogleNews.zip"
+        zip_path = "flask-server/data/word2vec/GoogleNews-vectors-negative300.bin.gz"
         download_url = "https://drive.google.com/uc?export=download&id=1UYR9nhlMx37qXqZ88bff7yJrmsVUY6yi"
 
         os.makedirs(os.path.dirname(bin_path), exist_ok=True)
@@ -32,11 +33,16 @@ class Word2VecSingleton:
                         f.write(chunk)
             print("Download complete.")
 
-            print("Extracting zip...")
-            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-                zip_ref.extractall(os.path.dirname(bin_path))
+            print("Extracting gzipped file...")
+            # If it's a .gz file, we can use gzip to decompress it
+            with open(bin_path, 'wb') as f_out:
+                with open(zip_path, 'rb') as f_in:
+                    shutil.copyfileobj(f_in, f_out)
             print("Extraction complete.")
-        
+            
+            # Clean up the zip file
+            os.remove(zip_path)
+
         # Load model
         if os.path.exists(kv_path):
             print(f"Loading optimized model from: {kv_path}")
