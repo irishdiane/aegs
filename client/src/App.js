@@ -1,18 +1,8 @@
-import { useState, useEffect } from 'react';
+import React from 'react';
+import AppRouter from './route'; // adjust path if needed
 
 function App() {
-  const [setData] = useState([{}]);
-
-  useEffect(() => {
-    fetch('grading-form')
-      .then(res => res.json())
-      .then(data => {
-        setData(data);
-        console.log(data);
-      })})
-      .catch(error => {
-        console.error("Failed to fetch grading form:", error);
-     });
+  return <AppRouter />;
 }
 
 export default App;

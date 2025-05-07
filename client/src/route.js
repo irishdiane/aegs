@@ -1,4 +1,4 @@
-// src/router.jsx
+// route.js
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import LandingPage from "./pages/LandingPage";
@@ -11,7 +11,7 @@ import GradingForm from "./pages/GradingForm";
 
 export default function AppRouter() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/aegs">
       <Routes>
         <Route path="/home" element={<LandingPage />} />
         <Route path="/members" element={<MembersFetcher />} />
