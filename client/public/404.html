@@ -1,19 +1,25 @@
-<!-- 404.html -->
 <!DOCTYPE html>
-<html lang="en">
+<html>
   <head>
     <meta charset="utf-8" />
-    <title>React App</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Redirecting...</title>
+    <script type="text/javascript">
+      (function() {
+        var path = window.location.pathname;
+        var search = window.location.search;
+        var hash = window.location.hash;
+        var redirect = "/aegs/index.html";
+
+        // Append full path so React Router can handle it
+        if (path && path !== "/aegs/" && path !== "/aegs") {
+          redirect += "?redirect=" + encodeURIComponent(path + search + hash);
+        }
+
+        window.location.replace(redirect);
+      })();
+    </script>
   </head>
   <body>
-    <script>
-      // Check if we're not already in the correct path
-      if (!location.pathname.startsWith('/aegs/')) {
-        // Redirect to the base path
-        const redirectTo = '/aegs' + location.pathname + location.search;
-        location.replace(redirectTo);
-      }
-    </script>
+    Redirecting...
   </body>
 </html>
