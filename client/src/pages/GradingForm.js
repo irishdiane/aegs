@@ -39,12 +39,11 @@ function GradingForm() {
   const [csvFile, setCsvFile] = useState(null);
   const [selectedRubric, setSelectedRubric] = useState(1);
   const [weights, setWeights] = useState({});
-  const [isLoading, setIsLoading] = useState(false);
   const [isGrading, setIsGrading] = useState(false);
   const [gradingComplete, setGradingComplete] = useState(false);
   const [uploadedFileName, setUploadedFileName] = useState(null);
   const [settingsApplied, setSettingsApplied] = useState(false);
-  
+
   // Popup states
   const [fileUploadedMessage, setFileUploadedMessage] = useState(null);
   const [fileUploadedVisible, setFileUploadedVisible] = useState(false);
@@ -315,8 +314,6 @@ function GradingForm() {
       setLoadingVisible(false);
       setErrorMessage(['Error during grading process:', error.message]);
       setErrorVisible(true);
-    } finally {
-      setIsLoading(false);
     }
   };
   
