@@ -23,12 +23,8 @@ class Word2VecSingleton:
         if not os.path.exists(kv_path) or not os.path.exists(npy_path):
             print("Downloading .kv and .npy model files from Google Drive...")
 
-            # Use the file IDs you provided
-            kv_id = "1n07-Zf0TrPaVmTaKbOAa9SeWBcyzq8Th"
-            npy_id = "1vrDNlebWCxGPtJGnhzBCXA0IZEl5Zul3"
-
-            gdown.download(f"https://drive.google.com/uc?id={kv_id}", kv_path, quiet=False)
-            gdown.download(f"https://drive.google.com/uc?id={npy_id}", npy_path, quiet=False)
+            gdown.download(f"https://drive.google.com/uc?id=1rDEb-O982wpqrLswUh5CJvZD7fwnYuuD", kv_path, quiet=False)
+            gdown.download(f"https://drive.google.com/uc?id=1m85AAmRRnoefyYQlyHMSGXd0bE1BI7fy", npy_path, quiet=False)
 
             print("Download complete.")
 
