@@ -123,7 +123,7 @@ const RubricsCarousel = () => {
                         <button onClick={handlePrev} className="arrow-button left-arrow">
                             <div className="arrow-image-container">
                                 <img
-                                    src={process.env.PUBLIC_URL + "/img/illus.png"} 
+                                    src={process.env.PUBLIC_URL + "/img/arrow.png"} 
                                     alt="Previous"
                                     className="arrow-image"
                                     style={{ transform: 'rotate(180deg)' }}

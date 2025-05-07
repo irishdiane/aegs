@@ -11,7 +11,7 @@ export default function Navbar() {
     <nav className="navbar">
       <div className="logo-container">
         <Link to="/" className="logo-link">
-          <img src="/img/navbar-logo.png" alt="Logo" className="logo-img" />
+          <img src={process.env.PUBLIC_URL + "/img/navbar-logo.png"} alt="Logo" className="logo-img" />
           <span>Home</span>
         </Link>
       </div>

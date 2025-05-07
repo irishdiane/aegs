@@ -401,7 +401,7 @@ function GradingForm() {
                   {!uploadedFileName && <b>Upload File</b>}
                   <input 
                     type="file"
-                    accept=".csv,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" 
+                    accept=".csv" 
                     onChange={handleFileChange} 
                     style={{ display: "none" }}
                     disabled={settingsApplied}
@@ -422,7 +422,6 @@ function GradingForm() {
               </div>
               <div className="file-help">
               <p>CSV file should contain essay_id, prompt, and essay_text columns</p>
-              <p>Accepts pdf and docs file</p>
             </div>
             </div>
           )}
