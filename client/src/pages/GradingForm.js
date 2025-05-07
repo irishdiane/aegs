@@ -396,7 +396,8 @@ function GradingForm() {
             <div className="upload-area">
               <div className="upload-option">
                 <label className={`upload-button ${settingsApplied ? 'disabled' : ''}`}>
-                  <img src="/img/64.png" alt="Upload" />
+                  <img   src={process.env.PUBLIC_URL + "/img/64.png"} 
+                   alt="Upload" />
                   {!uploadedFileName && <b>Upload File</b>}
                   <input 
                     type="file"
