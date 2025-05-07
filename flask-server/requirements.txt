@@ -1,3 +1,16 @@
+pandas
+numpy
+nltk
+scikit-fuzzy
 flask
 flask-cors
 gunicorn
+spacy
+sklearn
+language_tool_python
+collections
+os
+inspect
+traceback
+json
+matplotlib

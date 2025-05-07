@@ -3,7 +3,6 @@ from collections import Counter
 from sklearn.metrics.pairwise import cosine_similarity
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
-import string
 from preprocessor.word_expander import load_expanded_vocab
 
 stop_words = set(stopwords.words("english"))
