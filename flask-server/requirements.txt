@@ -6,7 +6,7 @@ flask
 flask-cors
 gunicorn
 spacy
-sklearn
+scikit-learn
 language_tool_python
 collections
 os
