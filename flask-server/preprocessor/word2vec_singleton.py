@@ -18,8 +18,8 @@ class Word2VecSingleton:
     def load_model(self):
         bin_path = "flask-server/data/word2vec/GoogleNews-vectors-negative300.bin"
         kv_path = "flask-server/data/word2vec/word2vec_prepared.kv"
-        zip_path = "flask-server/data/word2vec/GoogleNews-vectors-negative300.bin.gz"
-        download_url = "https://drive.google.com/uc?export=download&id=1UYR9nhlMx37qXqZ88bff7yJrmsVUY6yi"
+        zip_path = "flask-server/data/word2vec/GoogleNews-vectors-negative300.zip"
+        download_url = "https://drive.google.com/uc?export=download&id=13G_bwE4nJIfr5l4vxYkqR5ZS9hwrlrkH"
 
         os.makedirs(os.path.dirname(bin_path), exist_ok=True)
 
@@ -33,8 +33,7 @@ class Word2VecSingleton:
                         f.write(chunk)
             print("Download complete.")
 
-            print("Extracting gzipped file...")
-            # If it's a .gz file, we can use gzip to decompress it
+            print("Extracting zip file...")
             with open(bin_path, 'wb') as f_out:
                 with open(zip_path, 'rb') as f_in:
                     shutil.copyfileobj(f_in, f_out)
@@ -49,7 +48,7 @@ class Word2VecSingleton:
             self.model = gensim.models.KeyedVectors.load(kv_path)
         elif os.path.exists(bin_path):
             print(f"Loading raw model from: {bin_path}")
-            self.model = gensim.models.KeyedVectors.load_word2vec_format(bin_path, binary=True, limit=1000000)
+            self.model = gensim.models.KeyedVectors.load_word2vec_format(bin_path, binary=True, limit=500000)
             self.model.fill_norms()
             self.model.save(kv_path)
             print(f"Saved optimized model to: {kv_path}")
