@@ -1,7 +1,8 @@
+// src/components/PopupContainer.js
 import React from "react";
 import PopUp from "./PopUp";
 
-const PopupContainer = ({ 
+const PopupContainer = ({
   fileUploadedMessage,
   fileUploadedVisible,
   onFileUploadedClose,
@@ -20,7 +21,7 @@ const PopupContainer = ({
 }) => {
   return (
     <>
-      <PopUp 
+      <PopUp
         type="file-uploaded"
         message={fileUploadedMessage}
         visible={fileUploadedVisible}
@@ -28,7 +29,7 @@ const PopupContainer = ({
         autoHide={true}
       />
 
-      <PopUp 
+      <PopUp
         type="success"
         message={successMessage}
         visible={successVisible}
@@ -36,30 +37,31 @@ const PopupContainer = ({
         autoHide={true}
       />
 
-      <PopUp 
+      <PopUp
         type="error"
         message={errorMessage}
         visible={errorVisible}
         onClose={onErrorClose}
       />
 
-      <PopUp 
+      <PopUp
         type="loading"
         visible={loadingVisible && !errorVisible}
         onClose={onLoadingClose}
       />
 
-      <PopUp 
-        type="grading" 
-        visible={GradingVisible} 
-        onClose={onGradingClose} 
-        autoHide={true} 
-        autoHideDuration={15000} 
+      <PopUp
+        type="grading"
+        message="Grading in progress..."
+        visible={GradingVisible}
+        onClose={onGradingClose}
+        autoHide={true}
+        autoHideDuration={15000}
       />
 
       <PopUp
         type="weight-warning"
-        message={weightWarningVisible}
+        message="The total weight does not equal 100%."
         visible={weightWarningVisible}
         onClose={onWeightWarningClose}
       />

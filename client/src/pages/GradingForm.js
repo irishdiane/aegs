@@ -1,6 +1,6 @@
 // src/components/GradingForm.js
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import PopupContainer from '../components/PopUpContainer';
 import '../assets/css/GradingForm.css';
 import NavBar from '../components/NavBar';
@@ -60,7 +60,7 @@ function GradingForm() {
   useEffect(() => {
     const initialWeights = {};
     RUBRICS[selectedRubric].forEach(criterion => {
-      initialWeights[criterion.id] = 25;
+      initialWeights[criterion.id] = 0;
     });
     setWeights(initialWeights);
   }, [selectedRubric]);
@@ -93,16 +93,21 @@ function GradingForm() {
       return;
     }
     
-    if (file.name.endsWith('.csv')) {
+    if (
+      file.name.endsWith('.csv') ||
+      file.name.endsWith('.pdf') ||
+      file.name.endsWith('.doc') ||
+      file.name.endsWith('.docx')
+    ) {
       setCsvFile(file);
       setUploadedFileName(file.name);
       setFileUploadedMessage("File uploaded successfully!");
       setFileUploadedVisible(true);
     } else {
-      setErrorMessage(['Unsupported File Format.', 'Only accepts CSV file.']);
+      setErrorMessage(['Unsupported File Format.', 'Only accepts CSV, PDF, or DOC/DOCX files.']);
       setErrorVisible(true);
       e.target.value = null;
-    }
+    }    
   };
   
   // Clear uploaded file
@@ -132,10 +137,12 @@ function GradingForm() {
     if (settingsApplied) return;
     const resetWeights = {};
     RUBRICS[selectedRubric].forEach(criterion => {
-      resetWeights[criterion.id] = 25;
+      resetWeights[criterion.id] = 0;
     });
     setWeights(resetWeights);
   };
+
+  const totalWeight = Object.values(weights).reduce((sum, w) => sum + (parseInt(w, 10) || 0), 0);
   
   // Validate inputs before submission
   const validateInputs = () => {
@@ -151,7 +158,7 @@ function GradingForm() {
       }
     } else {
       if (!csvFile) {
-        errors.push('Please upload a CSV file.');
+        errors.push('Please upload a file.');
       }
     }
     
@@ -370,10 +377,10 @@ function GradingForm() {
               <div className="upload-option">
                 <label className={`upload-button ${settingsApplied ? 'disabled' : ''}`}>
                   <img src="/img/64.png" alt="Upload" />
-                  {!uploadedFileName && <b>Upload CSV File</b>}
+                  {!uploadedFileName && <b>Upload File</b>}
                   <input 
                     type="file"
-                    accept=".csv" 
+                    accept=".csv,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" 
                     onChange={handleFileChange} 
                     style={{ display: "none" }}
                     disabled={settingsApplied}
@@ -392,7 +399,17 @@ function GradingForm() {
                   </>
                 )}
               </div>
-              <p className="file-help">CSV file should contain essay_id, prompt, and essay_text columns</p>
+              <div className="file-help">
+              <p>CSV file should contain essay_id, prompt, and essay_text columns</p>
+              <p>Accepts pdf and docs file</p>
+            </div>
+            </div>
+          )}
+          {inputMethod === 'file' && (
+            <div className="csv-link" style={{ marginTop: '10px' }}>
+              <Link to="/user-guide#how-to-create-csv" className="csv-help">
+                Click here to learn how to create a csv file
+              </Link>
             </div>
           )}
         </div>
@@ -440,7 +457,7 @@ function GradingForm() {
                         type="number" 
                         min="1" 
                         max="100"
-                        value={weights[criterion.id] || 25} 
+                        value={weights[criterion.id] || 0} 
                         onChange={(e) => handleWeightChange(criterion.id, e.target.value)}
                         disabled={settingsApplied}
                       /> <b>%</b>
@@ -450,7 +467,7 @@ function GradingForm() {
               </tbody>
             </table>
             
-            <div className="weight-actions">
+            <div className="weight-actions" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <button 
                 className="reset-weights" 
                 onClick={resetWeights}
@@ -458,16 +475,16 @@ function GradingForm() {
               >
                 Reset Weights
               </button>
-            </div>
-            
+              <span className="total-weight"><b>Total: {totalWeight}/100%</b></span>
+            </div>    
             <div className="apply-settings-container">
-              <button 
-                className="apply-settings" 
-                onClick={handleApplySettings}
-                disabled={settingsApplied}
-              >
-                Apply Settings
-              </button>
+            <button 
+              className="apply-settings" 
+              onClick={handleApplySettings}
+              disabled={settingsApplied || totalWeight !== 100}
+            >
+              Apply Settings
+            </button>
             </div>
           </div>
         </div>

@@ -3,6 +3,10 @@
 /* Base Styles */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap');
 
+* {
+  font-family: 'Poppins', sans-serif;
+}
+
 .flex {
   display: flex;
 }
@@ -43,6 +47,7 @@
 .grade-now-container {
   width: 80%;
   max-width: 1200px;
+  margin-top: 3vh;
   margin: 20px auto;
   padding: 0 1rem;
   display: flex;
@@ -55,6 +60,10 @@
   width: 50%;
   padding: 20px;
   box-sizing: border-box;
+}
+
+.right-content {
+  margin-top: 5vh;
 }
 
 /* Left Content */
@@ -240,6 +249,24 @@
   margin-top: 1rem;
 }
 
+.csv-link {
+  justify-content: center;
+  text-align: center;
+  align-items: center;
+}
+
+.csv-help {
+  color: #4f96b8;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  margin-top: 2vh;
+}
+
+.csv-help:hover {
+  color: #2c3e50;
+  text-decoration: underline;
+}
+
 /* Right Content - Rubric */
 .rubric {
   background-color: #1f3038;
@@ -253,7 +280,6 @@
   justify-content: center;
   width: 100%;
   align-items: center;
-  margin-bottom: 1.5rem;
 }
 
 .rubric-button {
@@ -294,20 +320,18 @@
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   display: table;
-  margin: 0 auto;
   overflow: hidden;
 }
 
 .criteria-weights table {
   width: 100%;
+  margin-top: 0;
   table-layout: fixed;
   border-collapse: separate;
   border-spacing: 0;
   background-color: white;
   border-top-left-radius: 0;
   border-top-right-radius: 0;
-  border-bottom-left-radius: 2vh;
-  border-bottom-right-radius: 2vh;
   border: 1px solid black;
   border-top: none;
   border-right: 1px solid black;
@@ -393,6 +417,16 @@
   cursor: not-allowed;
 }
 
+.total-weight {
+  padding: 0.5rem 1rem;
+  font-size: 14px;
+  margin-left: 10px;
+  background-color: #2c3e50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+}
+
 .apply-settings-container {
   display: flex;
   justify-content: center;
@@ -408,7 +442,7 @@
   font-weight: bold;
   cursor: pointer;
   transition: all 0.3s ease;
-  margin-top: 3vh;
+  margin-top: 1vh;
 }
 
 .apply-settings:hover {
@@ -523,12 +557,15 @@
   text-align: center;
   overflow: hidden;
   animation: fadeIn 0.3s ease-out;
+  align-items: center;
+  justify-content: center;
 }
 
 .modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  text-align: center;
   padding: 10px;
   background-color: #8d8d8d;
   color: white;
@@ -536,7 +573,6 @@
 }
 
 .modal-title {
-  flex-grow: 1;
   font-weight: bold;
   font-size: 1.1rem;
 }
@@ -552,31 +588,6 @@
   text-align: center;
   color: #C95454;
   font-weight: bold;
-  margin: 20px 0;
-}
-
-.modal-body p {
-  margin-bottom: 0.5rem;
-}
-
-.close-btn {
-  display: block;
-  width: 100%;
-  background-color: #ccc;
-  border: none;
-  padding: 10px 40px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  margin-bottom: 2vh;
-}
-
-.close-btn:hover {
-  background-color: #888;
-}
-
-.close-btn:focus {
-  outline: none;
 }
 
 .success-popup,
@@ -584,7 +595,6 @@
   position: fixed;
   top: 20px;
   left: 50%;
-  transform: translateX(-50%);
   padding: 10px 20px;
   border-radius: 5px;
   font-weight: bold;

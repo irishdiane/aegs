@@ -1,5 +1,4 @@
-//popup.js
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
 const PopUp = ({ 
   type, 
@@ -9,8 +8,19 @@ const PopUp = ({
   autoHideDuration = 3000, 
   autoHide = false 
 }) => {
-  // Types: 'error', 'success', 'loading'
-  
+  // Store dismissed error messages in state only (no persistence)
+  const [dismissedErrors, setDismissedErrors] = useState([]);
+
+  // Local checkbox state for current modal
+  const [dontShowAgainChecked, setDontShowAgainChecked] = useState(false);
+
+  // Reset checkbox whenever a new modal is shown or message changes
+  useEffect(() => {
+    if (visible && (type === 'error' || type === 'weight-warning')) {
+      setDontShowAgainChecked(false);
+    }
+  }, [message, visible, type]);
+
   useEffect(() => {
     let timer;
     if (visible && autoHide) {
@@ -22,18 +32,42 @@ const PopUp = ({
       if (timer) clearTimeout(timer);
     };
   }, [visible, onClose, autoHide, autoHideDuration]);
-  
+
+  // Helper to uniquely identify error messages
+  // If message is array, join to string; else use string itself
+  const errorKey = Array.isArray(message) ? message.join('|') : message;
+
+  const handleDontShowAgainChange = (e) => {
+    const checked = e.target.checked;
+    setDontShowAgainChecked(checked);
+  };
+
+  // If this is an error or weight-warning modal,
+  // check if this specific message was dismissed before
+  if ((type === 'error' || type === 'weight-warning') && dismissedErrors.includes(errorKey)) {
+    // Already dismissed this specific message, skip showing modal
+    if (onClose) onClose();
+    return null;
+  }
+
+  // When user closes the modal, if "Don't show again" is checked, add this message to dismissed list
+  const handleClose = () => {
+    if (dontShowAgainChecked && (type === 'error' || type === 'weight-warning')) {
+      setDismissedErrors(prev => [...prev, errorKey]);
+    }
+    if (onClose) onClose();
+  };
+
   if (!visible) return null;
 
-  // For error overlay with modal
   if (type === 'error') {
     return (
-      <div className={`overlay`}>
+      <div className="overlay">
         <div className="modal-container">
           <div className="modal-header">
-          <img src="/img/navbar-logo.png" alt="Logo" style={{ height: "50px", width: "70px" }} className="mr-2" />
-          <span className="modal-title">Oops!</span>
-            <span className="close" onClick={onClose}>X</span>
+            <img src="/img/navbar-logo.png" alt="Logo" style={{ height: "40px", width: "50px" }} className="mr-2" />
+            <span className="modal-title">Oops!</span>
+            <span className="close" onClick={handleClose}>X</span>
           </div>
           <div className="modal-body">
             {Array.isArray(message) ? (
@@ -41,20 +75,27 @@ const PopUp = ({
             ) : (
               <p>{message}</p>
             )}
+            <label style={{ display: 'flex', alignItems: 'center', marginTop: '5vh', marginBottom: '1vh' }}>
+              <input
+                type="checkbox"
+                checked={dontShowAgainChecked}
+                onChange={handleDontShowAgainChange}
+                style={{ marginRight: '8px' }}
+              />
+              Don’t show again
+            </label>
           </div>
-          <button className="close-btn" onClick={onClose}>Ok</button>
         </div>
       </div>
     );
   }
 
-  // For loading overlay
   if (type === 'loading') {
     return (
       <div className="overlay">
         <div className="modal-container">
           <div className="modal-header">
-          <img src="/img/navbar-logo.png" alt="Logo" style={{ height: "50px", width: "70px" }} className="mr-2" />
+            <img src="/img/navbar-logo.png" alt="Logo" style={{ height: "50px", width: "70px" }} className="mr-2" />
             <span className="modal-title">Wait...</span>
             <span className="close" onClick={onClose}>X</span>
           </div>
@@ -67,29 +108,25 @@ const PopUp = ({
     );
   }
 
-  //for grading overlay
   if (type === 'grading') {
     return (
       <div className="overlay">
         <div className="modal-container">
           <div className="modal-header">
-          <img src="/img/navbar-logo.png" alt="Logo" style={{ height: "50px", width: "70px" }} className="mr-2" />
+            <img src="/img/navbar-logo.png" alt="Logo" style={{ height: "50px", width: "70px" }} className="mr-2" />
             <span className="modal-title">Please wait...</span>
             <span className="close" onClick={onClose}>X</span>
           </div>
           <div className="modal-body">
             <p>Grading your essays.</p>
             <p>Do not exit the site...</p>
-            <p>If you are grading a batch file (.csv),
-              your results will be automatically downloaded when grading is complete.
-            </p>
+            <p>If you are grading a batch file (.csv), your results will be automatically downloaded when grading is complete.</p>
           </div>
         </div>
       </div>
     );
   }
 
-  // For success notification
   if (type === 'success') {
     return (
       <div className="success-popup fade-in-out">
@@ -98,7 +135,6 @@ const PopUp = ({
     );
   }
 
-  // For file uploaded notification
   if (type === 'file-uploaded') {
     return (
       <div className="file-uploaded-message fade-in-out">
@@ -107,20 +143,29 @@ const PopUp = ({
     );
   }
 
-  //For weight warning notification
   if (type === 'weight-warning') {
     return (
       <div className="overlay">
         <div className="modal-container">
           <div className="modal-header">
-          <img src="/img/navbar-logo.png" alt="Logo" style={{ height: "50px", width: "70px" }} className="mr-2" />
+            <img src="/img/navbar-logo.png" alt="Logo" style={{ height: "50px", width: "70px" }} className="mr-2" />
             <span className="modal-title">Warning</span>
-            <span className="close" onClick={onClose}>X</span>
+            <span className="close" onClick={handleClose}>Close</span>
           </div>
           <div className="modal-body">
             <p>Total weights must equal exactly 100%.</p>
             <p>Please adjust your rubric weights.</p>
+            <label style={{ display: 'flex', alignItems: 'center', marginTop: '10px', color: 'black' }}>
+              <input
+                type="checkbox"
+                checked={dontShowAgainChecked}
+                onChange={handleDontShowAgainChange}
+                style={{ marginRight: '8px' }}
+              />
+              Don’t show again
+            </label>
           </div>
+          <button className="close-btn" onClick={handleClose}>Ok</button>
         </div>
       </div>
     );
