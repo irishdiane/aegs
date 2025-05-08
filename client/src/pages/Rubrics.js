@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Navbar from "../components/NavBar";
 import '../assets/css/Rubrics.css';
 
@@ -25,6 +25,7 @@ const RubricCard = ({ title, description, disabled, onKnowMore, rubric }) => {
 };
 
 const RubricsCarousel = () => {
+    document.title = "Rubrics";
     const [currentIndex, setCurrentIndex] = useState(1);
     const [selectedRubric, setSelectedRubric] = useState(null);
     const [showCarousel, setShowCarousel] = useState(true);

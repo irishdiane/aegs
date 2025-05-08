@@ -8,6 +8,7 @@ const PopUp = ({
   autoHideDuration = 3000, 
   autoHide = false 
 }) => {
+
   // Store dismissed error messages in state only (no persistence)
   const [dismissedErrors, setDismissedErrors] = useState([]);
 
@@ -60,119 +61,109 @@ const PopUp = ({
 
   if (!visible) return null;
 
-  if (type === 'error') {
-    return (
-      <div className="overlay">
-        <div className="modal-container">
-          <div className="modal-header">
-            <img src="/img/navbar-logo.png" alt="Logo" style={{ height: "40px", width: "50px" }} className="mr-2" />
-            <span className="modal-title">Oops!</span>
-            <span className="close" onClick={handleClose}>X</span>
-          </div>
-          <div className="modal-body">
-            {Array.isArray(message) ? (
-              message.map((msg, index) => <p key={index}>{msg}</p>)
-            ) : (
-              <p>{message}</p>
-            )}
-            <label style={{ display: 'flex', alignItems: 'center', marginTop: '5vh', marginBottom: '1vh' }}>
-              <input
-                type="checkbox"
-                checked={dontShowAgainChecked}
-                onChange={handleDontShowAgainChange}
-                style={{ marginRight: '8px' }}
-              />
-              Don’t show again
-            </label>
-          </div>
-          {/* Change here: call handleClose */}
-          <button className="close-btn" onClick={handleClose}>Ok</button>
-        </div>
-      </div>
-    );
-  }  
-
-  if (type === 'loading') {
-    return (
-      <div className="overlay">
-        <div className="modal-container">
-          <div className="modal-header">
-            <img src="/img/navbar-logo.png" alt="Logo" style={{ height: "50px", width: "70px" }} className="mr-2" />
-            <span className="modal-title">Wait...</span>
-            <span className="close" onClick={onClose}>X</span>
-          </div>
-          <div className="modal-body">
-            <p>Applying settings...</p>
-            <p>Do not exit the site...</p>
+  return (
+    <>
+      {type === 'error' && (
+        <div className="overlay">
+          <div className="modal-container">
+            <div className="modal-header">
+              <img src="/img/navbar-logo.png" alt="Logo" style={{ height: "40px", width: "50px" }} className="mr-2" />
+              <span className="modal-title">Oops!</span>
+              <span className="close" onClick={handleClose}>X</span>
+            </div>
+            <div className="modal-body">
+              {Array.isArray(message) ? (
+                message.map((msg, index) => <p key={index}>{msg}</p>)
+              ) : (
+                <p>{message}</p>
+              )}
+              <div className="checkbox-wrapper-13" style={{ marginTop: '5vh', marginBottom: '1vh', color: 'gray', display: 'flex', alignItems: 'center' }}>
+                <input
+                  id="dont-show-again-error"
+                  type="checkbox"
+                  checked={dontShowAgainChecked}
+                  onChange={handleDontShowAgainChange}
+                />
+                <label htmlFor="dont-show-again-error">Don’t show again</label>
+              </div>
+            </div>
+            <button className="close-btn" onClick={handleClose}>Ok</button>
           </div>
         </div>
-      </div>
-    );
-  }
+      )}
 
-  if (type === 'grading') {
-    return (
-      <div className="overlay">
-        <div className="modal-container">
-          <div className="modal-header">
-            <img src="/img/navbar-logo.png" alt="Logo" style={{ height: "50px", width: "70px" }} className="mr-2" />
-            <span className="modal-title">Please wait...</span>
-            <span className="close" onClick={onClose}>X</span>
-          </div>
-          <div className="modal-body">
-            <p>Grading your essays.</p>
-            <p>Do not exit the site...</p>
-            <p>If you are grading a batch file (.csv), your results will be automatically downloaded when grading is complete.</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (type === 'success') {
-    return (
-      <div className="success-popup fade-in-out">
-        {message}
-      </div>
-    );
-  }
-
-  if (type === 'file-uploaded') {
-    return (
-      <div className="file-uploaded-message fade-in-out">
-        {message}
-      </div>
-    );
-  }
-
-  if (type === 'weight-warning') {
-    return (
-      <div className="overlay">
-        <div className="modal-container">
-          <div className="modal-header">
-            <img src="/img/navbar-logo.png" alt="Logo" style={{ height: "50px", width: "70px" }} className="mr-2" />
-            <span className="modal-title">Warning</span>
-            <span className="close" onClick={handleClose}>X</span>
-          </div>
-          <div className="modal-body">
-            <p>Total weights must equal exactly 100%.</p>
-            <p>Please adjust your rubric weights.</p>
-            <label style={{ display: 'flex', alignItems: 'center', marginTop: '10px', color: 'black' }}>
-              <input
-                type="checkbox"
-                checked={dontShowAgainChecked}
-                onChange={handleDontShowAgainChange}
-                style={{ marginRight: '8px' }}
-              />
-              Don’t show again
-            </label>
+      {type === 'weight-warning' && (
+        <div className="overlay">
+          <div className="modal-container">
+            <div className="modal-header">
+              <img src="/img/navbar-logo.png" alt="Logo" style={{ height: "50px", width: "70px" }} className="mr-2" />
+              <span className="modal-title">Warning</span>
+              <span className="close" onClick={handleClose}>X</span>
+            </div>
+            <div className="modal-body">
+              <p>Total weights must equal exactly 100%.</p>
+              <p>Please adjust your rubric weights.</p>
+              <div className="checkbox-wrapper-13" style={{ marginTop: '10px', color: 'black', display: 'flex', alignItems: 'center' }}>
+                <input
+                  id="dont-show-again-weight-warning"
+                  type="checkbox"
+                  checked={dontShowAgainChecked}
+                  onChange={handleDontShowAgainChange}
+                />
+                <label htmlFor="dont-show-again-weight-warning">Don’t show again</label>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    );
-  }
+      )}
 
-  return null;
+      {/* Other modal types unchanged */}
+      {type === 'loading' && (
+        <div className="overlay">
+          <div className="modal-container">
+            <div className="modal-header">
+              <img src="/img/navbar-logo.png" alt="Logo" style={{ height: "50px", width: "70px" }} className="mr-2" />
+              <span className="modal-title">Wait...</span>
+              <span className="close" onClick={onClose}>X</span>
+            </div>
+            <div className="modal-body">
+              <p>Applying settings...</p>
+              <p>Do not exit the site...</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {type === 'grading' && (
+        <div className="overlay">
+          <div className="modal-container">
+            <div className="modal-header">
+              <img src="/img/navbar-logo.png" alt="Logo" style={{ height: "50px", width: "70px" }} className="mr-2" />
+              <span className="modal-title">Please wait...</span>
+              <span className="close" onClick={onClose}>X</span>
+            </div>
+            <div className="modal-body">
+              <p>Grading your essays.</p>
+              <p>Do not exit the site...</p>
+              <p>If you are grading a batch file (.csv), your results will be automatically downloaded when grading is complete.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {type === 'success' && (
+        <div className="success-popup fade-in-out">
+          {message}
+        </div>
+      )}
+
+      {type === 'file-uploaded' && (
+        <div className="file-uploaded-message fade-in-out">
+          {message}
+        </div>
+      )}
+    </>
+  );
 };
 
 export default PopUp;
