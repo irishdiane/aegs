@@ -583,6 +583,24 @@
   color: white;
 }
 
+.close-btn {
+  background-color: #ccc;
+  border: none;
+  padding: 10px 40px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-bottom: 2vh;
+}
+
+.close-btn:hover {
+  background-color: #888;
+}
+
+.close-btn:focus {
+  outline: none;
+}
+
 .modal-body {
   padding: 1.5rem;
   text-align: center;

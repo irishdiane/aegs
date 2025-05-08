@@ -85,10 +85,12 @@ const PopUp = ({
               Don’t show again
             </label>
           </div>
+          {/* Change here: call handleClose */}
+          <button className="close-btn" onClick={handleClose}>Ok</button>
         </div>
       </div>
     );
-  }
+  }  
 
   if (type === 'loading') {
     return (
@@ -150,7 +152,7 @@ const PopUp = ({
           <div className="modal-header">
             <img src="/img/navbar-logo.png" alt="Logo" style={{ height: "50px", width: "70px" }} className="mr-2" />
             <span className="modal-title">Warning</span>
-            <span className="close" onClick={handleClose}>Close</span>
+            <span className="close" onClick={handleClose}>X</span>
           </div>
           <div className="modal-body">
             <p>Total weights must equal exactly 100%.</p>
@@ -165,7 +167,6 @@ const PopUp = ({
               Don’t show again
             </label>
           </div>
-          <button className="close-btn" onClick={handleClose}>Ok</button>
         </div>
       </div>
     );
