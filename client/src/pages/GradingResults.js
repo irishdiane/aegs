@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../assets/css/GradingResults.css';
 import Navbar from '../components/NavBar';
+import API_URL from '../config'; 
 
 function GradingResults() {
   const navigate = useNavigate();
@@ -114,7 +115,7 @@ const renderCsvSummary = () => {
 };
  // Function to handle showing the enlarged image
   const handleImageClick = (criterion) => {
-    setEnlargedImage(`/api/fuzzy-graph/${criterion}`);
+    setEnlargedImage(`${API_URL}/api/fuzzy-graph/${criterion}`);
   };
   
   // Function to close the modal
@@ -151,12 +152,12 @@ const renderSingleResult = () => {
                   <td>{criterion.replace(/_/g, ' ').toUpperCase()}</td>
                   <td>{scaleScore(score)}</td>
                   <td>
-                    <img
-                      src={`/api/fuzzy-graph/${criterion}`}
-                      alt={`${criterion} fuzzy graph`}
-                      className="fuzzy-graph-thumbnail"
-                      onClick={() => handleImageClick(criterion)}
-                    />
+                  <img
+                    src={`${API_URL}/api/fuzzy-graph/${criterion}`}
+                    alt={`${criterion} fuzzy graph`}
+                    className="fuzzy-graph-thumbnail"
+                    onClick={() => handleImageClick(criterion)}
+                  />
                   </td>
                 </tr>
               ))}

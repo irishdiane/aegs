@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import PopupContainer from '../components/PopUpContainer';
 import '../assets/css/GradingForm.css';
 import NavBar from '../components/NavBar';
+import API_URL from '../config';
 
 
 const RUBRICS = {
@@ -238,7 +239,7 @@ function GradingForm() {
         
         console.log("Sending request:", requestData); // Debug log
         
-        response = await fetch('/api/evaluate/text', {
+        response = await fetch(`${API_URL}/api/evaluate/text`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -252,7 +253,7 @@ function GradingForm() {
         formData.append('weights', JSON.stringify(weights));
         formData.append('rubric_choice', selectedRubric);
 
-        response = await fetch('/api/upload', {
+        response = await fetch(`${API_URL}/api/upload`, {
           method: 'POST',
           body: formData,
         });
