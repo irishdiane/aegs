@@ -1,5 +1,5 @@
 // config.js
-const API_URL = 'https://b288-23-97-62-128.ngrok-free.app';
+const API_URL = 'https://d482-23-97-62-128.ngrok-free.app';
 
 export default API_URL;
 // You can also export multiple configurations if needed
