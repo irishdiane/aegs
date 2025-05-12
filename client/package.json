@@ -2,7 +2,7 @@
   "name": "client",
   "version": "0.1.0",
   "private": true,
-  "homepage": "https://irishdiane.github.io/aegs",
+  "homepage": "https://rubric-aegs.github.io/aegs",
   "proxy": "http://localhost:5000",
   "scripts": {
     "start": "react-scripts start",
