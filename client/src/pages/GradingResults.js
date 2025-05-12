@@ -8,7 +8,7 @@ import API_URL from '../config';
 function GradingResults() {
   const navigate = useNavigate();
   const [results, setResults] = useState(null);
-  const [scoreScale, setScoreScale] = useState('100');
+  const [scoreScale, setScoreScale] = useState('5'); // Changed default to '5' for 100-point scale
   const [enlargedImage, setEnlargedImage] = useState(null);
 
   useEffect(() => {
@@ -68,7 +68,6 @@ function GradingResults() {
         return `${(normalizedScore * 100).toFixed(1)}/100`;
     }
   };
-  
 
   // Handle score scale change
   const handleScaleChange = (e) => {
@@ -90,30 +89,31 @@ function GradingResults() {
   // Check if we have a valid single essay result structure
   const isValidSingleResult = results && 
     (typeof results === 'object') && 
-    ('overall_score' in results);
+    (results.overall_score !== undefined);
   
   // Render CSV summary results
-const renderCsvSummary = () => {
-  return (
-    <div className="csv-summary">
-      <h1>Batch Grading Results</h1>
-      
-      <div className="score-card">
-        <div className="stats-container">
-          <div className="stat-box">
-            <div className="stat-value">{results.essays_evaluated || 0}</div>
-            <div className="stat-label">Number of Essays</div>
-          </div>
-          <div className="stat-box">
-            <div className="stat-value">{results.essays_evaluated || 0}</div>
-            <div className="stat-label">Number of Graded Essays</div>
+  const renderCsvSummary = () => {
+    return (
+      <div className="csv-summary">
+        <h1>Batch Grading Results</h1>
+        
+        <div className="score-card">
+          <div className="stats-container">
+            <div className="stat-box">
+              <div className="stat-value">{results.essays_evaluated || 0}</div>
+              <div className="stat-label">Number of Essays</div>
+            </div>
+            <div className="stat-box">
+              <div className="stat-value">{results.essays_evaluated || 0}</div>
+              <div className="stat-label">Number of Graded Essays</div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-  );
-};
- // Function to handle showing the enlarged image
+    );
+  };
+
+  // Function to handle showing the enlarged image
   const handleImageClick = (criterion) => {
     setEnlargedImage(`${API_URL}/api/fuzzy-graph/${criterion}`);
   };
@@ -123,63 +123,84 @@ const renderCsvSummary = () => {
     setEnlargedImage(null);
   };
   
-const renderSingleResult = () => {
-  const overallScore = results && typeof results.overall_score === 'number' ? results.overall_score : 0;
-
-  return (
-    <div className="single-result">
-      <h1>Essay Grading Results</h1>
+  // Calculate overall score if not provided or zero
+  const calculateOverallScore = () => {
+    // If overall_score is valid, use it
+    if (results && typeof results.overall_score === 'number' && results.overall_score > 0) {
+      return results.overall_score;
+    }
+    
+    // Otherwise calculate from criteria_scores if available
+    if (results && results.criteria_scores && typeof results.criteria_scores === 'object') {
+      const scores = Object.values(results.criteria_scores).filter(score => 
+        typeof score === 'number' && !isNaN(score)
+      );
       
-      <div className="score-summary">
-        <h3>Final Score: {scaleScore(overallScore)}</h3>
-      </div>
+      if (scores.length > 0) {
+        return scores.reduce((sum, score) => sum + score, 0) / scores.length;
+      }
+    }
+    
+    return 0;
+  };
+  
+  const renderSingleResult = () => {
+    const overallScore = calculateOverallScore();
 
-      {/* Add condition to show criteria scores */}
-      {results.criteria_scores && typeof results.criteria_scores === 'object' && (
-        <div className="criteria-scores">
-          <h3>Criteria Scores:</h3>
-          <table>
-            <thead>
-              <tr>
-                <th>Criterion</th>
-                <th>Score</th>
-                <th>Fuzzy Graphs</th>
-              </tr>
-            </thead>
-            <tbody>
-              {Object.entries(results.criteria_scores).map(([criterion, score]) => (
-                <tr key={criterion}>
-                  <td>{criterion.replace(/_/g, ' ').toUpperCase()}</td>
-                  <td>{scaleScore(score)}</td>
-                  <td>
-                  <img
-                    src={`${API_URL}/api/fuzzy-graph/${criterion}`}
-                    alt={`${criterion} fuzzy graph`}
-                    className="fuzzy-graph-thumbnail"
-                    onClick={() => handleImageClick(criterion)}
-                  />
-                  </td>
+    return (
+      <div className="single-result">
+        <h1>Essay Grading Results</h1>
+        
+        <div className="score-summary">
+          <h3>Final Score: {scaleScore(overallScore)}</h3>
+        </div>
+
+        {/* Add condition to show criteria scores */}
+        {results.criteria_scores && typeof results.criteria_scores === 'object' && (
+          <div className="criteria-scores">
+            <h3>Criteria Scores:</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Criterion</th>
+                  <th>Score</th>
+                  <th>Fuzzy Graphs</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-      
-      {/* Modal for enlarged image */}
-      {enlargedImage && (
-        <div className="fuzzy-graph-modal" onClick={closeModal}>
-          <img 
-            src={enlargedImage}
-            alt="Enlarged fuzzy graph"
-            className="fuzzy-graph-enlarged"
-            onClick={(e) => e.stopPropagation()} 
-          />
-        </div>
-      )}
-    </div>
-  );
-};
+              </thead>
+              <tbody>
+                {Object.entries(results.criteria_scores).map(([criterion, score]) => (
+                  <tr key={criterion}>
+                    <td>{criterion.replace(/_/g, ' ').toUpperCase()}</td>
+                    <td>{scaleScore(score)}</td>
+                    <td>
+                    <img
+                      src={`${API_URL}/api/fuzzy-graph/${criterion}`}
+                      alt={`${criterion} fuzzy graph`}
+                      className="fuzzy-graph-thumbnail"
+                      onClick={() => handleImageClick(criterion)}
+                    />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        
+        {/* Modal for enlarged image */}
+        {enlargedImage && (
+          <div className="fuzzy-graph-modal" onClick={closeModal}>
+            <img 
+              src={enlargedImage}
+              alt="Enlarged fuzzy graph"
+              className="fuzzy-graph-enlarged"
+              onClick={(e) => e.stopPropagation()} 
+            />
+          </div>
+        )}
+      </div>
+    );
+  };
   
   return (
     <div className="flex flex-col min-h-screen">
