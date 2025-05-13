@@ -67,7 +67,7 @@ const PopUp = ({
         <div className="overlay">
           <div className="modal-container">
             <div className="modal-header">
-              <img src="/img/navbar-logo.png" alt="Logo" style={{ height: "40px", width: "50px" }} className="mr-2" />
+              <img src={process.env.PUBLIC_URL + "/img/navbar-logo.png"} alt="Logo" style={{ height: "40px", width: "50px" }} className="mr-2" />
               <span className="modal-title">Oops!</span>
               <span className="close" onClick={handleClose}>X</span>
             </div>
@@ -96,7 +96,7 @@ const PopUp = ({
         <div className="overlay">
           <div className="modal-container">
             <div className="modal-header">
-              <img src="/img/navbar-logo.png" alt="Logo" style={{ height: "50px", width: "70px" }} className="mr-2" />
+              <img src={process.env.PUBLIC_URL + "/img/navbar-logo.png"} alt="Logo" style={{ height: "50px", width: "70px" }} className="mr-2" />
               <span className="modal-title">Oops!</span>
               <span className="close" onClick={handleClose}>X</span>
             </div>
@@ -122,7 +122,7 @@ const PopUp = ({
         <div className="overlay">
           <div className="modal-container">
             <div className="modal-header">
-              <img src="/img/navbar-logo.png" alt="Logo" style={{ height: "50px", width: "70px" }} className="mr-2" />
+              <img src={process.env.PUBLIC_URL + "/img/navbar-logo.png"} alt="Logo" style={{ height: "50px", width: "70px" }} className="mr-2" />
               <span className="modal-title">Wait...</span>
               <span className="close" onClick={onClose}>X</span>
             </div>
@@ -138,7 +138,7 @@ const PopUp = ({
         <div className="overlay">
           <div className="modal-container">
             <div className="modal-header">
-              <img src="/img/navbar-logo.png" alt="Logo" style={{ height: "50px", width: "70px" }} className="mr-2" />
+              <img src={process.env.PUBLIC_URL + "/img/navbar-logo.png"} alt="Logo" style={{ height: "50px", width: "70px" }} className="mr-2" />
               <span className="modal-title">Please wait...</span>
               <span className="close" onClick={onClose}>X</span>
             </div>
@@ -155,7 +155,7 @@ const PopUp = ({
         <div className="overlay">
           <div className="modal-container">
             <div className="modal-header">
-              <img src="/img/navbar-logo.png" alt="Logo" style={{ height: "50px", width: "70px" }} className="mr-2" />
+              <img src={process.env.PUBLIC_URL + "/img/navbar-logo.png"} alt="Logo" style={{ height: "50px", width: "70px" }} className="mr-2" />
               <span className="modal-title">Grading your essays.</span>
               <span className="close" onClick={onClose}>X</span>
             </div>
