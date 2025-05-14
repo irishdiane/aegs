@@ -68,17 +68,11 @@ function GradingForm() {
 
   // Initialize weights whenever rubric changes
   useEffect(() => {
-    document.title = "Grade Now";
     const initialWeights = {};
-    if (selectedRubric === 'custom') {
-      customRubric.forEach(criterion => {
-        initialWeights[criterion.id] = 0;
-      });
-    } else {
-      RUBRICS[selectedRubric].forEach(criterion => {
-        initialWeights[criterion.id] = 0;
-      });
-    }
+    document.title = "Grade Now";
+    RUBRICS[selectedRubric].forEach(criterion => {
+      initialWeights[criterion.id] = 0;
+    });
     setWeights(initialWeights);
   }, [selectedRubric, customRubric]);
   
