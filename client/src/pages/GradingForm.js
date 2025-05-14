@@ -48,12 +48,12 @@ function GradingForm() {
   const [csvFile, setCsvFile] = useState(null);
   const [selectedRubric, setSelectedRubric] = useState(1);
   const [weights, setWeights] = useState({});
-  const [isLoading, setIsLoading] = useState(false);
+  const [setIsLoading] = useState(false);
   const [isGrading, setIsGrading] = useState(false);
   const [gradingComplete, setGradingComplete] = useState(false);
   const [uploadedFileName, setUploadedFileName] = useState(null);
   const [settingsApplied, setSettingsApplied] = useState(false);
-  const [customRubric, setCustomRubric] = useState([]); // New state for custom rubric criteria
+  const [customRubric] = useState([]); // New state for custom rubric criteria
   
   // Popup states
   const [fileUploadedMessage, setFileUploadedMessage] = useState(null);
