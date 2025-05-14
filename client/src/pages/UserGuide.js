@@ -81,11 +81,6 @@ export default function UserGuide() {
             ]
         },
         {
-            key: "batch-file",
-            question: "How to create a batch file for grading using Excel or Sheets?",
-            answer: "To create a batch file, open Excel or Google Sheets, enter your essays in the first column, and save the file as a CSV. Ensure that each essay is in a separate row."
-        },
-        {
             key: "membership-functions",
             question: "What does the 'Membership Functions for Ideas' graph mean?",
             answer: [

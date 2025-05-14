@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import PopupContainer from '../components/PopUpContainer';
 import '../assets/css/GradingForm.css';
 import NavBar from '../components/NavBar';
+import API_URL from '../config';
 
 
 const RUBRICS = {
@@ -11,7 +12,7 @@ const RUBRICS = {
     { id: 'ideas', name: 'Ideas and Analysis' },   
     { id: 'evidence', name: 'Development and Support' }, 
     { id: 'organization', name: 'Organization' },
-    { id: 'vocabulary', name: 'Language Use' },
+    { id: 'language_tone', name: 'Language Use' },
   ],
   2: [
     { id: 'ideas', name: 'Depth of Reflection' },
@@ -48,13 +49,11 @@ function GradingForm() {
   const [csvFile, setCsvFile] = useState(null);
   const [selectedRubric, setSelectedRubric] = useState(1);
   const [weights, setWeights] = useState({});
-  const [isLoading, setIsLoading] = useState(false);
   const [isGrading, setIsGrading] = useState(false);
   const [gradingComplete, setGradingComplete] = useState(false);
   const [uploadedFileName, setUploadedFileName] = useState(null);
   const [settingsApplied, setSettingsApplied] = useState(false);
-  const [customRubric, setCustomRubric] = useState([]); // New state for custom rubric criteria
-  
+
   // Popup states
   const [fileUploadedMessage, setFileUploadedMessage] = useState(null);
   const [fileUploadedVisible, setFileUploadedVisible] = useState(false);
@@ -306,7 +305,7 @@ const weightMin = selectedRubric === 4 || selectedRubric === 'custom' ? 0 : 1;
         
         console.log("Sending request:", requestData); // Debug log
         
-        response = await fetch('/api/evaluate/text', {
+        response = await fetch(`${API_URL}/api/evaluate/text`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -320,7 +319,7 @@ const weightMin = selectedRubric === 4 || selectedRubric === 'custom' ? 0 : 1;
         formData.append('weights', JSON.stringify(weights));
         formData.append('rubric_choice', selectedRubric);
 
-        response = await fetch('/api/upload', {
+        response = await fetch(`${API_URL}/api/upload`, {
           method: 'POST',
           body: formData,
         });
@@ -358,25 +357,30 @@ const weightMin = selectedRubric === 4 || selectedRubric === 'custom' ? 0 : 1;
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'scored_essays.csv';
+        a.download = `graded_${csvFile.name}`;
         localStorage.setItem('gradingResults', JSON.stringify({ type: 'csv'}));
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
-        
+        setTimeout(() => {
+          navigate('/home');
+        }, 6000);
+
         setGradingComplete(true);
         setLoadingVisible(false);
         setSuccessMessage('CSV processing complete! The scored file has been downloaded.');
         setSuccessVisible(true);
+        setTimeout(() => {
+          setSuccessMessage('Grading complete! You will now be redirected to Home tab.');
+          setSuccessVisible(true);
+        }, 5000);
       }
     } catch (error) {
       console.error('Error during grading:', error);
       setLoadingVisible(false);
       setErrorMessage(['Error during grading process:', error.message]);
       setErrorVisible(true);
-    } finally {
-      setIsLoading(false);
     }
   };
   
@@ -459,11 +463,12 @@ const weightMin = selectedRubric === 4 || selectedRubric === 'custom' ? 0 : 1;
             <div className="upload-area">
               <div className="upload-option">
                 <label className={`upload-button ${settingsApplied ? 'disabled' : ''}`}>
-                  <img src="/img/64.png" alt="Upload" />
+                  <img   src={process.env.PUBLIC_URL + "/img/64.png"} 
+                   alt="Upload" />
                   {!uploadedFileName && <b>Upload File</b>}
                   <input 
                     type="file"
-                    accept=".csv,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" 
+                    accept=".csv" 
                     onChange={handleFileChange} 
                     style={{ display: "none" }}
                     disabled={settingsApplied}
@@ -484,7 +489,6 @@ const weightMin = selectedRubric === 4 || selectedRubric === 'custom' ? 0 : 1;
               </div>
               <div className="file-help">
               <p>CSV file should contain essay_id, prompt, and essay_text columns</p>
-              <p>Accepts pdf and docs file</p>
             </div>
             </div>
           )}
@@ -589,13 +593,15 @@ const weightMin = selectedRubric === 4 || selectedRubric === 'custom' ? 0 : 1;
           {isGrading ? 'Grading...' : 'Start Grading'}
         </button>
         
+        {inputMethod === 'text' && (
         <button 
-          className={`button secondary ${!gradingComplete ? 'disabled' : ''}`} 
-          onClick={viewResults} 
-          disabled={!gradingComplete}
-        >
-          View Results
+            className={`button secondary ${!gradingComplete ? 'disabled' : ''}`} 
+            onClick={viewResults} 
+            disabled={!gradingComplete}
+          >
+            View Results
         </button>
+        )}
       </div>
     </div>
   );

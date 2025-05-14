@@ -16,11 +16,11 @@ class IdeasFuzzyEvaluator(FuzzyLogicEvaluator):
         category_score = ctrl.Consequent(np.arange(0, 1.1, 0.01), 'category_score')
     
         # Define membership functions for input (raw scores)
-        score['poor'] = fuzz.trapmf(score.universe, [0.0, 0.5, 0.55, 0.6])
-        score['fair'] = fuzz.trapmf(score.universe, [0.6, 0.65, 0.75, 0.8])
-        score['good'] = fuzz.trapmf(score.universe, [0.8, 0.82, 0.84, 0.86])
-        score['very_good'] = fuzz.trapmf(score.universe, [0.85, 0.88, 0.90, 0.92])
-        score['excellent'] = fuzz.trapmf(score.universe, [0.90, 0.94, 0.96, 1.0])
+        score['poor'] = fuzz.trapmf(score.universe, [0.0, 0.2, 0.35, 0.45])
+        score['fair'] = fuzz.trapmf(score.universe, [0.45, 0.5, 0.6, 0.65])
+        score['good'] = fuzz.trapmf(score.universe, [0.65, 0.7, 0.75, 0.8])
+        score['very_good'] = fuzz.trapmf(score.universe, [0.8, 0.85, 0.9, 0.95])
+        score['excellent'] = fuzz.trapmf(score.universe, [0.9, 0.95, 0.98, 1.0])
 
         # Define membership functions for category scores 
         category_score['poor'] = fuzz.trapmf(category_score.universe, [0.0, 0.25, 0.33, 0.40])

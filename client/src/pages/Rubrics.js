@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Navbar from "../components/NavBar";
 import '../assets/css/Rubrics.css';
 
@@ -37,22 +37,22 @@ const RubricsCarousel = () => {
             pageTitle: "Rubric A",
             title: "Rubric A",
             description: "ACT Writing Scoring Rubric",
-            imagePath: "/img/ActRubric.png",
-            pdfPath: "/pdf/ACTWritingScoringRubric.pdf", 
+            imagePath: `${process.env.PUBLIC_URL}/img/ActRubric.png`,
+            pdfPath: `${process.env.PUBLIC_URL}/pdf/ACTWritingScoringRubric.pdf`, 
         },
         {
             pageTitle: "Rubric B",
             title: "Rubric B",
             description: "ReadThinkWrite Reflective Essay Rubric",
-            imagePath: "/img/ReadWriteThink.png",
-            pdfPath: "/pdf/ReadWriteThinkRubric.pdf", 
+            imagePath: `${process.env.PUBLIC_URL}/img/ReadWriteThink.png`,
+            pdfPath: `${process.env.PUBLIC_URL}/pdf/ReadWriteThinkRubric.pdf`, 
         },
         {
             pageTitle: "Rubric C",
             title: "Rubric C",
             description: "College Essay Writing Rubric",
-            imagePath: "/img/CollegeEssayRubric.png",
-            pdfPath: "/pdf/CollegeLevelWritingRubric.pdf", 
+            imagePath: `${process.env.PUBLIC_URL}/img/CollegeEssayRubric.png`,
+            pdfPath: `${process.env.PUBLIC_URL}/pdf/CollegeLevelWritingRubric.pdf`, 
         },
     ];
 
@@ -123,7 +123,7 @@ const RubricsCarousel = () => {
                         <button onClick={handlePrev} className="arrow-button left-arrow">
                             <div className="arrow-image-container">
                                 <img
-                                    src="/img/arrow.png"
+                                    src={process.env.PUBLIC_URL + "/img/arrow.png"} 
                                     alt="Previous"
                                     className="arrow-image"
                                     style={{ transform: 'rotate(180deg)' }}
@@ -149,7 +149,8 @@ const RubricsCarousel = () => {
                         </div>
                         <button onClick={handleNext} className="arrow-button right-arrow">
                             <div className="arrow-image-container">
-                                <img src="/img/arrow.png" alt="Next" className="arrow-image" />
+                                <img   src={process.env.PUBLIC_URL + "/img/arrow.png"} 
+                                 alt="Next" className="arrow-image" />
                             </div>
                         </button>
                     </div>
