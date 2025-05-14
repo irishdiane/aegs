@@ -3,13 +3,13 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../assets/css/GradingResults.css';
 import Navbar from '../components/NavBar';
-import API_URL from '../config'; 
 
 function GradingResults() {
   const navigate = useNavigate();
   const [results, setResults] = useState(null);
   const [scoreScale, setScoreScale] = useState('5'); // Changed default to '5' for 100-point scale
   const [enlargedImage, setEnlargedImage] = useState(null);
+  
 
   useEffect(() => {
     // Retrieve results from localStorage
@@ -20,6 +20,7 @@ function GradingResults() {
         const parsedResults = JSON.parse(storedResults);
         setResults(parsedResults);
         console.log('Loaded results:', parsedResults);
+        console.log('Detected results type:', parsedResults?.type);
       } catch (error) {
         console.error('Error parsing results:', error);
         alert('Error loading results. See console for details.');
@@ -84,8 +85,9 @@ function GradingResults() {
   }
   
   // Check if this is a CSV summary result
-  const isCsvResult = results && results.type === 'csv';
-  
+  const isCsvResult = results?.type === 'csv';
+  const isEssayFileType = ['pdf', 'docx', 'txt'].includes(results?.type);
+    
   // Check if we have a valid single essay result structure
   const isValidSingleResult = results && 
     (typeof results === 'object') && 
@@ -115,7 +117,7 @@ function GradingResults() {
 
   // Function to handle showing the enlarged image
   const handleImageClick = (criterion) => {
-    setEnlargedImage(`${API_URL}/api/fuzzy-graph/${criterion}`);
+    setEnlargedImage(`/api/fuzzy-graph/${criterion}`);
   };
   
   // Function to close the modal
@@ -124,104 +126,133 @@ function GradingResults() {
   };
   
   // Calculate overall score if not provided or zero
-  const calculateOverallScore = () => {
-    // If overall_score is valid, use it
-    if (results && typeof results.overall_score === 'number' && results.overall_score > 0) {
-      return results.overall_score;
-    }
+// Replace the calculateOverallScore function in GradingResults.js
+const calculateOverallScore = () => {
+  // If we have criteria scores and weights
+  if (results && 
+      results.criteria_scores && 
+      typeof results.criteria_scores === 'object' &&
+      results.weights && 
+      typeof results.weights === 'object') {
     
-    // Otherwise calculate from criteria_scores if available
-    if (results && results.criteria_scores && typeof results.criteria_scores === 'object') {
-      const scores = Object.values(results.criteria_scores).filter(score => 
-        typeof score === 'number' && !isNaN(score)
-      );
+    let totalScore = 0;
+    let totalWeight = 0;
+    
+    // Calculate weighted score
+    Object.entries(results.criteria_scores).forEach(([criterion, score]) => {
+      const weight = parseFloat(results.weights[criterion]);
       
-      if (scores.length > 0) {
-        return scores.reduce((sum, score) => sum + score, 0) / scores.length;
+      // Only include criteria with weights > 0
+      if (!isNaN(weight) && weight > 0) {
+        totalScore += score * weight;
+        totalWeight += weight;
       }
-    }
+    });
     
-    return 0;
-  };
+    // Return weighted average
+    if (totalWeight > 0) {
+      return totalScore / totalWeight;
+    }
+  }
   
-  const renderSingleResult = () => {
-    const overallScore = calculateOverallScore();
+  // If overall_score is valid, use it as a fallback
+  if (results && typeof results.overall_score === 'number' && results.overall_score > 0) {
+    return results.overall_score;
+  }
+  
+  // Otherwise calculate simple average from criteria_scores if available
+  if (results && results.criteria_scores && typeof results.criteria_scores === 'object') {
+    const scores = Object.values(results.criteria_scores).filter(score => 
+      typeof score === 'number' && !isNaN(score)
+    );
+    
+    if (scores.length > 0) {
+      return scores.reduce((sum, score) => sum + score, 0) / scores.length;
+    }
+  }
+  
+  return 0;
+};
 
-    return (
-      <div className="single-result">
-        <h1>Essay Grading Results</h1>
-        
-        <div className="score-summary">
-          <h3>Final Score: {scaleScore(overallScore)}</h3>
-        </div>
+// Update the renderSingleResult function in GradingResults.js around line 138
+const renderSingleResult = () => {
+  const overallScore = calculateOverallScore();
 
-        {/* Add condition to show criteria scores */}
-        {results.criteria_scores && typeof results.criteria_scores === 'object' && (
-          <div className="criteria-scores">
-            <h3>Criteria Scores:</h3>
-            <table>
-              <thead>
-                <tr>
-                  <th>Criterion</th>
-                  <th>Score</th>
-                  <th>Fuzzy Graphs</th>
-                </tr>
-              </thead>
-              <tbody>
-                {Object.entries(results.criteria_scores).map(([criterion, score]) => (
+  return (
+    <div className="single-result">
+      <h1>Essay Grading Results</h1>
+      
+      <div className="score-summary">
+        <h3>Final Score: {scaleScore(overallScore)}</h3>
+      </div>
+
+      {/* Add condition to show criteria scores */}
+      {results.criteria_scores && typeof results.criteria_scores === 'object' && (
+        <div className="criteria-scores">
+          <h3>Criteria Scores:</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Criterion</th>
+                <th>Score</th>
+                <th>Fuzzy Graphs</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Object.entries(results.criteria_scores)
+                // Filter out criteria with zero weights for custom rubric
+                .filter(([criterion, score]) => {
+                  // If we have weights in results, use them to filter
+                  if (results.weights && typeof results.weights === 'object') {
+                    return results.weights[criterion] > 0;
+                  }
+                  // Otherwise show all criteria (for backward compatibility)
+                  return true;
+                })
+                .map(([criterion, score]) => (
                   <tr key={criterion}>
                     <td>{criterion.replace(/_/g, ' ').toUpperCase()}</td>
                     <td>{scaleScore(score)}</td>
                     <td>
                     <img
-                      src={`${API_URL}/api/fuzzy-graph/${criterion}`}
+                      src={`/api/fuzzy-graph/${criterion}`}
                       alt={`${criterion} fuzzy graph`}
                       className="fuzzy-graph-thumbnail"
                       onClick={() => handleImageClick(criterion)}
                     />
                     </td>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-        
-        {/* Modal for enlarged image */}
-        {enlargedImage && (
-          <div className="fuzzy-graph-modal" onClick={closeModal}>
-            <img 
-              src={enlargedImage}
-              alt="Enlarged fuzzy graph"
-              className="fuzzy-graph-enlarged"
-              onClick={(e) => e.stopPropagation()} 
-            />
-          </div>
-        )}
-      </div>
-    );
-  };
+                ))
+              }
+            </tbody>
+          </table>
+        </div>
+      )}
+      
+      {/* Modal for enlarged image */}
+      {enlargedImage && (
+        <div className="fuzzy-graph-modal" onClick={closeModal}>
+          <img 
+            src={enlargedImage}
+            alt="Enlarged fuzzy graph"
+            className="fuzzy-graph-enlarged"
+            onClick={(e) => e.stopPropagation()} 
+          />
+        </div>
+      )}
+    </div>
+  );
+};
   
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
       <div className="grading-results-container">
-      {!isCsvResult && (
-        <div className="score-scale-selector">
-          <label htmlFor="score-scale">Score Scale:</label>
-            <select id="score-scale" value={scoreScale} onChange={handleScaleChange}>
-            <option value="1">5-point scale</option>
-            <option value="2">20-point scale</option>
-            <option value="3">Letter grades (A-E)</option>
-            <option value="4">Letter grades with +/-</option>
-            <option value="5">100-point scale</option>
-            <option value="6">50-point scale</option>
-          </select>
-          
-        </div>
-      )}
+      {!isCsvResult}
       
-      {isCsvResult ? renderCsvSummary() : isValidSingleResult ? renderSingleResult() : (
+      {isCsvResult && renderCsvSummary()}
+      {isEssayFileType && renderSingleResult()}
+      {!isCsvResult && !isEssayFileType && (
         <div className="results-error" style={{ padding: '20px', backgroundColor: '#ffeeee', borderRadius: '4px' }}>
           <p>The result format is not recognized. Please try grading again.</p>
         </div>

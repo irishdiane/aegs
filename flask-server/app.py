@@ -10,6 +10,9 @@ from werkzeug.utils import secure_filename
 import tempfile
 import inspect
 import traceback
+import matplotlib
+matplotlib.use('Agg')  # Use the non-interactive Agg backend
+import matplotlib.pyplot as plt
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 import matplotlib.pyplot as plt
 import io
@@ -21,7 +24,7 @@ app = Flask(__name__)
 
 # Configure file upload settings
 UPLOAD_FOLDER = tempfile.gettempdir()
-ALLOWED_EXTENSIONS = {'csv'}
+ALLOWED_EXTENSIONS = {'csv', 'pdf', 'docx', 'txt'}  
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
@@ -111,69 +114,218 @@ def upload_file():
             
         # Check if file is allowed
         if not allowed_file(file.filename):
-            return jsonify({'error': 'File type not allowed. Please upload a CSV file.'}), 400
+            return jsonify({'error': f'File type not allowed. Please upload one of these types: {", ".join(ALLOWED_EXTENSIONS)}'}), 400
         
-        weights_json = request.form.get('weights', '{}')
-        print(f"DEBUG - Received weights_json: {weights_json}")
-        try:
-            weights = json.loads(weights_json)
-        except json.JSONDecodeError as e:
-            print(f"DEBUG - JSON decode error: {e}")
-            weights = {}
-
-        rubric_choice = request.form.get('rubric_choice', '2')
-        scale_choice = request.form.get('scale_choice', '5')
-        print(f"DEBUG - Received rubric_choice: {rubric_choice}, scale_choice: {scale_choice}")
-
-        # Save file temporarily
         filename = secure_filename(file.filename)
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
+        
+        # Get file extension
+        ext = os.path.splitext(filename)[1].lower()
+        
+        # Process based on file type
+        if ext == '.csv':
+            # Handle CSV files - batch processing
+            return process_csv_file(filepath, request)
+        else:
+            # Handle document files (PDF, DOCX, TXT) - single essay processing
+            return process_document_file(filepath, request)
+            
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
 
+# Helper function to process CSV files (moved from the original upload_file function)
+def process_csv_file(filepath, request):
+    weights_json = request.form.get('weights', '{}')
+    try:
+        weights = json.loads(weights_json)
+    except json.JSONDecodeError:
+        weights = {}
+
+    rubric_choice = request.form.get('rubric_choice', '2')
+    scale_choice = request.form.get('scale_choice', '5')
+
+    # Create evaluation system
+    system = EssayEvaluationSystem()
+                
+    # Set configuration directly based on frontend inputs
+    system.rubric_choice = str(rubric_choice)
+    
+    # Set criteria based on rubric choice
+    if system.rubric_choice == "1":
+        system.criteria = ["ideas", "evidence", "organization", "language_tone"]
+    elif system.rubric_choice == "2":
+        system.criteria = ["ideas", "evidence", "language_tone", "grammar"]
+    else:  # rubric_choice == "3"
+        system.criteria = ["ideas", "evidence", "organization", "language_tone", "grammar", "mechanics", "vocabulary"]
+    
+    # Convert from frontend weights to backend weights format
+    if weights:
+        total = sum(weights.values())
+        # Set weights from frontend
+        system.weights = {k: (v / total) * 100 for k, v in weights.items() if k in system.criteria}
+    else:
+        # Equal weights
+        weight_value = 100 / len(system.criteria)
+        system.weights = {criterion: weight_value for criterion in system.criteria}
+        
+    system.scale_choice = str(scale_choice)
+
+    # Process the CSV file using the InputProcessor
+    essays = InputProcessor.batch_process_csv(filepath)
+
+    # Evaluate each essay and store the results
+    result = system.process_csv_file(filepath)
+
+    if "error" in result:
+        return jsonify({"error": result["error"]}), 500
+
+    # The output file is already created by process_csv_file
+    output_filepath = result["output_file"]
+    output_filename = os.path.basename(output_filepath)
+
+    # Return the file for download
+    return send_file(output_filepath, 
+                    mimetype='text/csv',
+                    download_name=output_filename,
+                    as_attachment=True)
+
+# Helper function to process document files (PDF, DOCX, TXT)
+def process_document_file(filepath, request):
+    try:
         # Create evaluation system
         system = EssayEvaluationSystem()
-                    
-        # Set configuration directly based on frontend inputs
-        system.rubric_choice = str(rubric_choice)
         
-        # Set criteria based on rubric choice
-        if system.rubric_choice == "1":
+        # Extract text from file
+        essay_text = system.extract_text_from_file(filepath)
+        
+        if not essay_text:
+            return jsonify({'error': 'Could not extract text from the file'}), 400
+            
+        # Get the prompt from form data (if available)
+        prompt = request.form.get('prompt', '')
+        
+        # If no explicit prompt is provided, try to extract it from the first paragraph
+        if not prompt and len(essay_text) > 50:  # Ensure there's enough text to split
+            paragraphs = [p.strip() for p in essay_text.split('\n') if p.strip()]
+            if len(paragraphs) >= 2:
+                prompt = paragraphs[0]
+                essay_text = '\n'.join(paragraphs[1:])
+                
+        # Configure the evaluation system
+        rubric_choice = request.form.get('rubric_choice', '2')
+        system.rubric_choice = rubric_choice
+
+        if rubric_choice == "1":
             system.criteria = ["ideas", "evidence", "organization", "language_tone"]
-        elif system.rubric_choice == "2":
+        elif rubric_choice == "2":
             system.criteria = ["ideas", "evidence", "language_tone", "grammar"]
-        else:  # rubric_choice == "3"
-            system.criteria = ["ideas", "evidence", "organization", "language_tone", "grammar", "mechanics", "vocabulary"]
-        
-        # Convert from frontend weights to backend weights format
-        if weights:
-            total = sum(weights.values())
-            # Set weights from frontend
-            system.weights = {k: (v / total) * 100 for k, v in weights.items() if k in system.criteria}
         else:
+            system.criteria = ["ideas", "evidence", "organization", "language_tone", "grammar", "mechanics", "vocabulary"]
+
+        # Weights
+        weights_json = request.form.get('weights', '{}')
+        try:
+            raw_weights = json.loads(weights_json)
+            total = sum(raw_weights.values())
+            system.weights = {k: (v / total) * 100 for k, v in raw_weights.items() if k in system.criteria}
+        except (json.JSONDecodeError, TypeError):
             # Equal weights
             weight_value = 100 / len(system.criteria)
             system.weights = {criterion: weight_value for criterion in system.criteria}
-            
-        system.scale_choice = str(scale_choice)
 
-        # Process the CSV file using the InputProcessor
-        essays = InputProcessor.batch_process_csv(filepath)
+        # Scale
+        scale_choice = request.form.get('scale_choice', '5')
+        system.scale_choice = scale_choice
 
-        # Evaluate each essay and store the results
-        result = system.process_csv_file(filepath)
+        # Evaluate the essay
+        result = system.evaluate_essay(essay_text, prompt)
+        
+        # Calculate weighted score
+        weighted_score = 0
+        for criterion in system.criteria:
+            fuzzy_key = f"fuzzy_{criterion}"
+            if fuzzy_key in result and criterion in system.weights:
+                weighted_score += result.get(fuzzy_key, 0) * (system.weights[criterion] / 100)
+        
+        # Format the response
+        response = {
+            'overall_score': weighted_score,
+            'criteria_scores': {criterion: result.get(f'fuzzy_{criterion}', 0) for criterion in system.criteria},
+            'scale_type': system.scale_choice,
+            'final_score': system.convert_to_scale(weighted_score, system.scale_choice),
+            'essay_text': essay_text,
+            'prompt': prompt
+        }
+        
+        return jsonify(response)
+        
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+    
+@app.route('/api/evaluate/file', methods=['POST'])
+def evaluate_file():
+    """Endpoint for evaluating a single essay from a PDF or Word file"""
+    try:
+        uploaded_file = request.files.get('file')
+        if not uploaded_file:
+            return jsonify({'error': 'No file uploaded'}), 400
 
-        if "error" in result:
-            return jsonify({"error": result["error"]}), 500
+        # Save and read file content
+        file_path = os.path.join('uploads', uploaded_file.filename)
+        uploaded_file.save(file_path)
 
-        # The output file is already created by process_csv_file
-        output_filepath = result["output_file"]
-        output_filename = os.path.basename(output_filepath)
+        system = EssayEvaluationSystem()
+        full_text = system.extract_text_from_file(file_path)
 
-        # Return the file for download
-        return send_file(output_filepath, 
-                        mimetype='text/csv',
-                        download_name=output_filename,
-                        as_attachment=True)
+        # Split paragraphs
+        paragraphs = [p.strip() for p in full_text.split('\n') if p.strip()]
+        if len(paragraphs) < 2:
+            return jsonify({'error': 'File must have at least two paragraphs: prompt and essay'}), 400
+
+        prompt = paragraphs[0]
+        essay_text = paragraphs[1]
+
+        # Rubric choice
+        rubric_choice = request.form.get('rubric_choice', '2')
+        system.rubric_choice = rubric_choice
+
+        if rubric_choice == "1":
+            system.criteria = ["ideas", "evidence", "organization", "language_tone"]
+        elif rubric_choice == "2":
+            system.criteria = ["ideas", "evidence", "language_tone", "grammar"]
+        else:
+            system.criteria = ["ideas", "evidence", "organization", "language_tone", "grammar", "mechanics", "vocabulary"]
+
+        # Weights
+        weights_raw = request.form.get('weights')
+        if weights_raw:
+            raw_weights = json.loads(weights_raw)
+            total = sum(raw_weights.values())
+            system.weights = {k: (v / total) * 100 for k, v in raw_weights.items() if k in system.criteria}
+        else:
+            weight_value = 100 / len(system.criteria)
+            system.weights = {criterion: weight_value for criterion in system.criteria}
+
+        # Scale
+        scale_choice = request.form.get('scale_choice', '5')
+        system.scale_choice = scale_choice
+
+        result = system.evaluate_essay(essay_text, prompt)
+
+        fuzzy_overall = result.get('fuzzy_overall', 0)
+        scaled_score = system.convert_to_scale(fuzzy_overall, scale_choice)
+
+        response = {
+            'overall_score': fuzzy_overall,
+            'criteria_scores': {c: result.get(f'fuzzy_{c}', 0) for c in system.criteria},
+            'scale_type': scale_choice,
+            'final_score': scaled_score
+        }
+
+        return jsonify(response)
 
     except Exception as e:
         traceback.print_exc()
