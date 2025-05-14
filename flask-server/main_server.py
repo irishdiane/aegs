@@ -72,13 +72,13 @@ class EssayEvaluationSystem:
         self.word2vec_model = get_word2vec_model()
         
         # Initialize evaluators with the shared model
-        self.grammar_evaluator = GrammarEvaluator
+        self.grammar_evaluator = GrammarEvaluator()
         self.ideas_evaluator = IdeasEvaluator(word2vec_model=self.word2vec_model)
         self.organization_evaluator = OrganizationEvaluator(word2vec_model=self.word2vec_model)
         self.evidence_evaluator = EvidenceEvaluator(word2vec_model=self.word2vec_model)
         self.language_tone_evaluator = LanguageToneEvaluator(word2vec_model=self.word2vec_model)
         self.vocabulary_evaluator = VocabularyEvaluator(word2vec_model=self.word2vec_model)
-        self.mechanics_evaluator = MechanicsFuzzyEvaluator
+        self.mechanics_evaluator = MechanicsFuzzyEvaluator()
 
         # Initialize fuzzy evaluators
         self.grammar_fuzzy = GrammarFuzzyEvaluator()
@@ -392,3 +392,6 @@ def process_csv_file(self, file_path):
     except Exception as e:
         traceback.print_exc()
         return {"error": f"Error processing CSV file: {str(e)}"}
+
+model_path = os.path.join("data", "word2vec", "GoogleNews-vectors-negative300.bin")
+print(f"[DEBUG] Looking for model at: {os.path.abspath(model_path)}")

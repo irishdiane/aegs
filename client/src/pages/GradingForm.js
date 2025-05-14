@@ -27,6 +27,15 @@ const RUBRICS = {
     { id: 'grammar', name: 'Sentence Structure (Grammar)' },
     { id: 'mechanics', name: 'Mechanics and Presentation' },
     { id: 'vocabulary', name: 'Vocabulary and Word Usage' },
+  ],
+  4: [
+    { id: 'ideas', name: 'Ideas' },
+    { id: 'evidence', name: 'Evidence' },
+    { id: 'organization', name: 'Organization' },
+    { id: 'language_tone', name: 'Language Tone' },
+    { id: 'grammar', name: 'Grammar' },
+    { id: 'mechanics', name: 'Mechanics' },
+    { id: 'vocabulary', name: 'Vocabulary' },
   ]
 };
 
@@ -44,6 +53,7 @@ function GradingForm() {
   const [gradingComplete, setGradingComplete] = useState(false);
   const [uploadedFileName, setUploadedFileName] = useState(null);
   const [settingsApplied, setSettingsApplied] = useState(false);
+  const [customRubric, setCustomRubric] = useState([]); // New state for custom rubric criteria
   
   // Popup states
   const [fileUploadedMessage, setFileUploadedMessage] = useState(null);
@@ -59,12 +69,17 @@ function GradingForm() {
   // Initialize weights whenever rubric changes
   useEffect(() => {
     const initialWeights = {};
-    document.title = "Grade Now";
-    RUBRICS[selectedRubric].forEach(criterion => {
-      initialWeights[criterion.id] = 0;
-    });
+    if (selectedRubric === 'custom') {
+      customRubric.forEach(criterion => {
+        initialWeights[criterion.id] = 0;
+      });
+    } else {
+      RUBRICS[selectedRubric].forEach(criterion => {
+        initialWeights[criterion.id] = 0;
+      });
+    }
     setWeights(initialWeights);
-  }, [selectedRubric]);
+  }, [selectedRubric, customRubric]);
   
   // Handle popup close functions
   const handleFileUploadedClose = () => setFileUploadedVisible(false);
@@ -117,30 +132,67 @@ function GradingForm() {
     setUploadedFileName(null);
     setCsvFile(null);
   };
-  
+
+  // Handle custom rubric criterion change (e.g., name change)
+const handleCustomCriterionChange = (index, field, value) => {
+  const updatedRubric = [...customRubric];
+  updatedRubric[index][field] = value;
+  setCustomRubric(updatedRubric);
+};
+
+// Handle custom rubric weight change
+const handleCustomWeightChange = (criterionId, value) => {
+  // Convert input to a number
+  let numValue = Number(value);
+
+  // If input is empty or not a number, treat as 0
+  if (isNaN(numValue) || value === "") numValue = 0;
+
+  // Clamp value between 0 and 100
+  numValue = Math.max(0, Math.min(numValue, 100));
+
+  // Update state
+  const updatedRubric = [...customRubric];
+  updatedRubric[criterionId].weight = numValue;
+  setCustomRubric(updatedRubric);
+};
+
+
+const weightMin = selectedRubric === 4 || selectedRubric === 'custom' ? 0 : 1;
+
   // Handle weight change
   const handleWeightChange = (criterionId, value) => {
     if (settingsApplied) return;
-    // Parse input value, default to 0 if not a number
-  const newValue = parseInt(value, 10) || 0;
-
-  // Calculate what the new total would be if this change is applied
-  const currentTotal = Object.entries(weights).reduce(
-    (sum, [id, w]) => sum + (id === criterionId ? 0 : (parseInt(w, 10) || 0)),
-    0
-  );
-  const newTotal = currentTotal + newValue;
-
-  // If new total would be more than 100, block and show warning
-  if (newTotal > 100) {
-    setWeightWarningVisible(true);
-    return; // Block the change
-  }
+  
+    let numValue = Number(value);
+  
+    // If input is empty or not a number, treat as 0
+    if (isNaN(numValue) || value === "") numValue = 0;
+  
+    // For Rubric A/B/C, minimum is 1
+    if (selectedRubric !== 4 && selectedRubric !== 'custom') {
+      numValue = Math.max(1, Math.min(numValue, 100));
+    } else {
+      numValue = Math.max(0, Math.min(numValue, 100));
+    }
+  
+    // Calculate what the new total would be if this change is applied
+    const currentTotal = Object.entries(weights).reduce(
+      (sum, [id, w]) => sum + (id === criterionId ? 0 : (parseInt(w, 10) || 0)),
+      0
+    );
+    const newTotal = currentTotal + numValue;
+  
+    if (newTotal > 100) {
+      setWeightWarningVisible(true);
+      return;
+    }
+  
     setWeights(prev => ({
       ...prev,
-      [criterionId]: parseInt(value, 10) || 1
+      [criterionId]: numValue
     }));
-  };
+  };    
   
   // Handle rubric selection
   const handleRubricChange = (rubricNumber) => {
@@ -152,9 +204,15 @@ function GradingForm() {
   const resetWeights = () => {
     if (settingsApplied) return;
     const resetWeights = {};
-    RUBRICS[selectedRubric].forEach(criterion => {
-      resetWeights[criterion.id] = 0;
-    });
+    if (selectedRubric === 'custom') {
+      customRubric.forEach(criterion => {
+        resetWeights[criterion.id] = 0;
+      });
+    } else {
+      RUBRICS[selectedRubric].forEach(criterion => {
+        resetWeights[criterion.id] = 0;
+      });
+    }
     setWeights(resetWeights);
   };
 
@@ -210,6 +268,15 @@ function GradingForm() {
         setSuccessMessage('Settings applied successfully!');
         setSuccessVisible(true);
       }, 2000);
+
+      if (selectedRubric === 4) {
+        const newWeights = {};
+        customRubric.forEach(criterion => {
+          newWeights[criterion.id] = criterion.weight || 0;
+        });
+        setWeights(newWeights);
+      }
+      
     }
   };
   
@@ -452,8 +519,15 @@ function GradingForm() {
               disabled={settingsApplied}
             >
               Rubric C
-            </button>
-          </div>
+            </button> {/* Custom Rubric Button */}
+              <button 
+                className={`rubric-button ${selectedRubric === 4 ? 'active' : ''}`} 
+                onClick={() => handleRubricChange(4)}
+                disabled={settingsApplied}
+              >
+                Custom Rubric
+              </button>
+            </div>
           
           <div className="criteria-weights">
             <table>
@@ -464,16 +538,16 @@ function GradingForm() {
                 </tr>
               </thead>
               <tbody>
-                {RUBRICS[selectedRubric].map(criterion => (
+              {RUBRICS[selectedRubric].map(criterion => (
                   <tr key={criterion.id}>
                     <td>{criterion.name}</td>
                     <td>
                       <input 
-                        className="bold-text" 
+                        className="bold-text"
                         type="number" 
-                        min="1" 
-                        max="100"
-                        value={weights[criterion.id] || 0} 
+                        min={weightMin}
+                        max={100}
+                        value={weights[criterion.id] ?? weightMin}
                         onChange={(e) => handleWeightChange(criterion.id, e.target.value)}
                         disabled={settingsApplied}
                       /> <b>%</b>
