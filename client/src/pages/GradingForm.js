@@ -133,20 +133,6 @@ function GradingForm() {
     setCsvFile(null);
   };
 
-  // Handle custom rubric criterion change (e.g., name change)
-const handleCustomCriterionChange = (index, field, value) => {
-  const updatedRubric = [...customRubric];
-  updatedRubric[index][field] = value;
-  setCustomRubric(updatedRubric);
-};
-
-// Handle custom rubric weight change
-const handleCustomWeightChange = (index, value) => {
-  const updatedRubric = [...customRubric];
-  updatedRubric[index].weight = parseInt(value, 10) || 0;
-  setCustomRubric(updatedRubric);
-};
-
 const weightMin = selectedRubric === 4 || selectedRubric === 'custom' ? 0 : 1;
 
   // Handle weight change
