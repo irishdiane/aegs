@@ -4,7 +4,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import PopupContainer from '../components/PopUpContainer';
 import '../assets/css/GradingForm.css';
 import NavBar from '../components/NavBar';
-import API_URL from '../config';
 
 
 const RUBRICS = {
@@ -12,7 +11,7 @@ const RUBRICS = {
     { id: 'ideas', name: 'Ideas and Analysis' },   
     { id: 'evidence', name: 'Development and Support' }, 
     { id: 'organization', name: 'Organization' },
-    { id: 'language_tone', name: 'Language Use' },
+    { id: 'vocabulary', name: 'Language Use' },
   ],
   2: [
     { id: 'ideas', name: 'Depth of Reflection' },
@@ -49,11 +48,13 @@ function GradingForm() {
   const [csvFile, setCsvFile] = useState(null);
   const [selectedRubric, setSelectedRubric] = useState(1);
   const [weights, setWeights] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
   const [isGrading, setIsGrading] = useState(false);
   const [gradingComplete, setGradingComplete] = useState(false);
   const [uploadedFileName, setUploadedFileName] = useState(null);
   const [settingsApplied, setSettingsApplied] = useState(false);
-
+  const [customRubric, setCustomRubric] = useState([]); // New state for custom rubric criteria
+  
   // Popup states
   const [fileUploadedMessage, setFileUploadedMessage] = useState(null);
   const [fileUploadedVisible, setFileUploadedVisible] = useState(false);
@@ -140,22 +141,11 @@ const handleCustomCriterionChange = (index, field, value) => {
 };
 
 // Handle custom rubric weight change
-const handleCustomWeightChange = (criterionId, value) => {
-  // Convert input to a number
-  let numValue = Number(value);
-
-  // If input is empty or not a number, treat as 0
-  if (isNaN(numValue) || value === "") numValue = 0;
-
-  // Clamp value between 0 and 100
-  numValue = Math.max(0, Math.min(numValue, 100));
-
-  // Update state
+const handleCustomWeightChange = (index, value) => {
   const updatedRubric = [...customRubric];
-  updatedRubric[criterionId].weight = numValue;
+  updatedRubric[index].weight = parseInt(value, 10) || 0;
   setCustomRubric(updatedRubric);
 };
-
 
 const weightMin = selectedRubric === 4 || selectedRubric === 'custom' ? 0 : 1;
 
@@ -163,24 +153,25 @@ const weightMin = selectedRubric === 4 || selectedRubric === 'custom' ? 0 : 1;
   const handleWeightChange = (criterionId, value) => {
     if (settingsApplied) return;
   
-    let numValue = Number(value);
+    // Only allow numbers, and disallow leading zeros except for 0 itself
+    let newValue = value.replace(/^0+(?=\d)/, ''); // Remove leading zeros except single 0
   
-    // If input is empty or not a number, treat as 0
-    if (isNaN(numValue) || value === "") numValue = 0;
+    // Convert to integer
+    let parsedValue = parseInt(newValue, 10);
   
-    // For Rubric A/B/C, minimum is 1
-    if (selectedRubric !== 4 && selectedRubric !== 'custom') {
-      numValue = Math.max(1, Math.min(numValue, 100));
-    } else {
-      numValue = Math.max(0, Math.min(numValue, 100));
-    }
+    // If not a number, set to 0
+    if (isNaN(parsedValue)) parsedValue = 0;
+  
+    // Apply min logic based on rubric
+    const min = selectedRubric === 4 || selectedRubric === 'custom' ? 0 : 1;
+    if (parsedValue < min) parsedValue = min;
   
     // Calculate what the new total would be if this change is applied
     const currentTotal = Object.entries(weights).reduce(
       (sum, [id, w]) => sum + (id === criterionId ? 0 : (parseInt(w, 10) || 0)),
       0
     );
-    const newTotal = currentTotal + numValue;
+    const newTotal = currentTotal + parsedValue;
   
     if (newTotal > 100) {
       setWeightWarningVisible(true);
@@ -189,9 +180,9 @@ const weightMin = selectedRubric === 4 || selectedRubric === 'custom' ? 0 : 1;
   
     setWeights(prev => ({
       ...prev,
-      [criterionId]: numValue
+      [criterionId]: parsedValue
     }));
-  };    
+  };  
   
   // Handle rubric selection
   const handleRubricChange = (rubricNumber) => {
@@ -305,7 +296,7 @@ const weightMin = selectedRubric === 4 || selectedRubric === 'custom' ? 0 : 1;
         
         console.log("Sending request:", requestData); // Debug log
         
-        response = await fetch(`${API_URL}/api/evaluate/text`, {
+        response = await fetch('/api/evaluate/text', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -319,7 +310,7 @@ const weightMin = selectedRubric === 4 || selectedRubric === 'custom' ? 0 : 1;
         formData.append('weights', JSON.stringify(weights));
         formData.append('rubric_choice', selectedRubric);
 
-        response = await fetch(`${API_URL}/api/upload`, {
+        response = await fetch('/api/upload', {
           method: 'POST',
           body: formData,
         });
@@ -357,30 +348,25 @@ const weightMin = selectedRubric === 4 || selectedRubric === 'custom' ? 0 : 1;
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `graded_${csvFile.name}`;
+        a.download = 'scored_essays.csv';
         localStorage.setItem('gradingResults', JSON.stringify({ type: 'csv'}));
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
-        setTimeout(() => {
-          navigate('/home');
-        }, 6000);
-
+        
         setGradingComplete(true);
         setLoadingVisible(false);
         setSuccessMessage('CSV processing complete! The scored file has been downloaded.');
         setSuccessVisible(true);
-        setTimeout(() => {
-          setSuccessMessage('Grading complete! You will now be redirected to Home tab.');
-          setSuccessVisible(true);
-        }, 5000);
       }
     } catch (error) {
       console.error('Error during grading:', error);
       setLoadingVisible(false);
       setErrorMessage(['Error during grading process:', error.message]);
       setErrorVisible(true);
+    } finally {
+      setIsLoading(false);
     }
   };
   
@@ -463,12 +449,11 @@ const weightMin = selectedRubric === 4 || selectedRubric === 'custom' ? 0 : 1;
             <div className="upload-area">
               <div className="upload-option">
                 <label className={`upload-button ${settingsApplied ? 'disabled' : ''}`}>
-                  <img   src={process.env.PUBLIC_URL + "/img/64.png"} 
-                   alt="Upload" />
+                  <img src="/img/64.png" alt="Upload" />
                   {!uploadedFileName && <b>Upload File</b>}
                   <input 
                     type="file"
-                    accept=".csv" 
+                    accept=".csv,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" 
                     onChange={handleFileChange} 
                     style={{ display: "none" }}
                     disabled={settingsApplied}
@@ -489,6 +474,7 @@ const weightMin = selectedRubric === 4 || selectedRubric === 'custom' ? 0 : 1;
               </div>
               <div className="file-help">
               <p>CSV file should contain essay_id, prompt, and essay_text columns</p>
+              <p>Accepts pdf and docs file</p>
             </div>
             </div>
           )}
@@ -593,15 +579,13 @@ const weightMin = selectedRubric === 4 || selectedRubric === 'custom' ? 0 : 1;
           {isGrading ? 'Grading...' : 'Start Grading'}
         </button>
         
-        {inputMethod === 'text' && (
         <button 
-            className={`button secondary ${!gradingComplete ? 'disabled' : ''}`} 
-            onClick={viewResults} 
-            disabled={!gradingComplete}
-          >
-            View Results
+          className={`button secondary ${!gradingComplete ? 'disabled' : ''}`} 
+          onClick={viewResults} 
+          disabled={!gradingComplete}
+        >
+          View Results
         </button>
-        )}
       </div>
     </div>
   );
