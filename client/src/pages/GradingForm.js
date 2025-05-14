@@ -32,7 +32,7 @@ const RUBRICS = {
     { id: 'ideas', name: 'Ideas' },
     { id: 'evidence', name: 'Evidence' },
     { id: 'organization', name: 'Organization' },
-    { id: 'language_tone', name: 'Language Tone' },
+    { id: 'language_tone', name: 'Language and Tone' },
     { id: 'grammar', name: 'Grammar' },
     { id: 'mechanics', name: 'Mechanics' },
     { id: 'vocabulary', name: 'Vocabulary' },
@@ -48,7 +48,6 @@ function GradingForm() {
   const [csvFile, setCsvFile] = useState(null);
   const [selectedRubric, setSelectedRubric] = useState(1);
   const [weights, setWeights] = useState({});
-  const [setIsLoading] = useState(false);
   const [isGrading, setIsGrading] = useState(false);
   const [gradingComplete, setGradingComplete] = useState(false);
   const [uploadedFileName, setUploadedFileName] = useState(null);
@@ -217,41 +216,42 @@ const weightMin = selectedRubric === 4 || selectedRubric === 'custom' ? 0 : 1;
   };
   
   // Apply settings
-  const handleApplySettings = () => {
-    if (settingsApplied) return;
-    
-    // Calculate total weights
-    const totalWeight = Object.values(weights).reduce((sum, weight) => sum + weight, 0);
-    
-    // Check if total is exactly 100
-    if (totalWeight !== 100) {
+const handleApplySettings = () => {
+  if (settingsApplied) return;
+  
+  // Calculate total weights
+  const totalWeight = Object.values(weights).reduce((sum, weight) => sum + weight, 0);
+  
+  // Check if total is exactly 100 (except for custom rubric where we allow some zeros)
+  if (totalWeight !== 100) {
+    // For custom rubric (option 4), we'll allow proceeding if criteria with weights sum to 100
+    if (selectedRubric === 4) {
+      const nonZeroWeights = Object.values(weights).filter(w => w > 0);
+      const nonZeroTotal = nonZeroWeights.reduce((sum, w) => sum + w, 0);
+      if (nonZeroTotal !== 100) {
+        setWeightWarningVisible(true);
+        return;
+      }
+    } else {
+      // For standard rubrics, all weights must be positive and sum to 100
       setWeightWarningVisible(true);
       return;
     }
+  }
+  
+  if (validateInputs()) {
+    setLoadingVisible(true);
     
-    if (validateInputs()) {
-      setLoadingVisible(true);
-      
-      // Simulate processing time
-      setTimeout(() => {
-        setLoadingVisible(false);
-        setSettingsApplied(true);
-        setSuccessMessage('Settings applied successfully!');
-        setSuccessVisible(true);
-      }, 2000);
+    // Simulate processing time
+    setTimeout(() => {
+      setLoadingVisible(false);
+      setSettingsApplied(true);
+      setSuccessMessage('Settings applied successfully!');
+      setSuccessVisible(true);
+    }, 2000);
+  }
+};
 
-      if (selectedRubric === 4) {
-        const newWeights = {};
-        customRubric.forEach(criterion => {
-          newWeights[criterion.id] = criterion.weight || 0;
-        });
-        setWeights(newWeights);
-      }
-      
-    }
-  };
-  
-  
   // Handle grading submission
   const handleSubmitGrading = async () => {
     if (!settingsApplied) {
@@ -266,25 +266,26 @@ const weightMin = selectedRubric === 4 || selectedRubric === 'custom' ? 0 : 1;
     try {
       let response;
       
-      if (inputMethod === 'text') {
-        // Make sure we're formatting the request exactly as the server expects
-        const requestData = {
-          prompt: prompt,
-          essay_text: essayText,
-          weights: weights,
-          rubric_choice: selectedRubric
-        };
-        
-        console.log("Sending request:", requestData); // Debug log
-        
-        response = await fetch('/api/evaluate/text', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(requestData),
-        });
-      } else {
+        if (inputMethod === 'text') {
+          // Make sure we're formatting the request exactly as the server expects
+          const requestData = {
+            prompt: prompt,
+            essay_text: essayText,
+            weights: weights,
+            rubric_choice: selectedRubric
+          };
+          
+          console.log("Sending request:", requestData); // Debug log
+          
+          response = await fetch('/api/evaluate/text', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestData),
+          });
+        }
+       else {
         // API call for file upload
         const formData = new FormData();
         formData.append('file', csvFile);
@@ -308,11 +309,16 @@ const weightMin = selectedRubric === 4 || selectedRubric === 'custom' ? 0 : 1;
         
       if (inputMethod === 'text') {
         // For text input, we get JSON response
-        const results = await response.json();
-        
-        // Store results in localStorage to access them on results page
-        localStorage.setItem('gradingResults', JSON.stringify(results));
-        
+      const results = await response.json();
+
+      // Make sure weights are included in stored results
+      if (!results.weights) {
+        results.weights = weights;
+      }
+
+      // Store results in localStorage to access them on results page
+      localStorage.setItem('gradingResults', JSON.stringify(results));
+              
         setGradingComplete(true);
         setLoadingVisible(false);
         setSuccessMessage('Grading completed successfully!');
@@ -329,17 +335,24 @@ const weightMin = selectedRubric === 4 || selectedRubric === 'custom' ? 0 : 1;
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'scored_essays.csv';
+        a.download = `graded_${csvFile.name}`;
         localStorage.setItem('gradingResults', JSON.stringify({ type: 'csv'}));
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
-        
+        setTimeout(() => {
+          navigate('/home');
+        }, 6000);
+
         setGradingComplete(true);
         setLoadingVisible(false);
         setSuccessMessage('CSV processing complete! The scored file has been downloaded.');
         setSuccessVisible(true);
+        setTimeout(() => {
+          setSuccessMessage('Grading complete! You will now be redirected to Home tab.');
+          setSuccessVisible(true);
+        }, 5000);
       }
     } catch (error) {
       console.error('Error during grading:', error);
@@ -347,7 +360,6 @@ const weightMin = selectedRubric === 4 || selectedRubric === 'custom' ? 0 : 1;
       setErrorMessage(['Error during grading process:', error.message]);
       setErrorVisible(true);
     } finally {
-      setIsLoading(false);
     }
   };
   
@@ -409,6 +421,7 @@ const weightMin = selectedRubric === 4 || selectedRubric === 'custom' ? 0 : 1;
                 <input
                   type="text"
                   id="prompt"
+                  maxLength={200} 
                   placeholder="Type or paste essay topic/theme here..."
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
@@ -419,6 +432,7 @@ const weightMin = selectedRubric === 4 || selectedRubric === 'custom' ? 0 : 1;
               <div className="input-field">
                 <textarea
                   id="essayText"
+                  maxLength={10000} 
                   placeholder="Type or paste essay here..."
                   value={essayText}
                   onChange={(e) => setEssayText(e.target.value)}
@@ -455,7 +469,8 @@ const weightMin = selectedRubric === 4 || selectedRubric === 'custom' ? 0 : 1;
               </div>
               <div className="file-help">
               <p>CSV file should contain essay_id, prompt, and essay_text columns</p>
-              <p>Accepts pdf and docs file</p>
+              <p>Accepts .csv, .pdf, and .docx file</p>
+              <p>File size limit: 16MB</p>              
             </div>
             </div>
           )}
@@ -548,6 +563,16 @@ const weightMin = selectedRubric === 4 || selectedRubric === 'custom' ? 0 : 1;
             </button>
             </div>
           </div>
+          <label for="scale_choice">Select Scoring Scale:</label>
+          <select id="scale_choice" name="scale_choice" required>
+              <option value="1">5-point scale</option>
+              <option value="2">20-point scale</option>
+              <option value="3">Letter grades (A-E)</option>
+              <option value="4">Letter grades with +/-</option>
+              <option value="5" selected>100-point scale</option>
+              <option value="6">50-point scale</option>
+          </select>
+
         </div>
       </div>
       

@@ -2,6 +2,8 @@
 
 import os
 import pandas as pd
+import docx
+import PyPDF2
 import inspect
 import json
 import traceback
@@ -297,7 +299,78 @@ class EssayEvaluationSystem:
                 'fuzzy_vocabulary': 0.5,
                 'fuzzy_mechanics': 0.5,
             }
-            
+        
+    def extract_text_from_file(self, file_path):
+        """Extract text from PDF, DOCX, or TXT files with improved error handling"""
+        ext = os.path.splitext(file_path)[1].lower()
+        
+        # Handle PDF files
+        if ext == ".pdf":
+            try:
+                with open(file_path, 'rb') as f:
+                    reader = PyPDF2.PdfReader(f)
+                    
+                    # Check if the PDF has pages
+                    if len(reader.pages) == 0:
+                        print("PDF has no pages")
+                        return ""
+                    
+                    # Extract text from each page with better error handling
+                    text_content = []
+                    for i, page in enumerate(reader.pages):
+                        try:
+                            page_text = page.extract_text()
+                            if page_text:
+                                text_content.append(page_text)
+                        except Exception as e:
+                            print(f"Error extracting text from page {i}: {e}")
+                    
+                    # Check if we got any content
+                    if not text_content:
+                        print("No text extracted from PDF")
+                        return ""
+                        
+                    return "\n".join(text_content)
+                    
+            except PyPDF2.errors.PdfReadError as e:
+                print(f"PDF read error: {e}")
+                return ""
+            except Exception as e:
+                print(f"Error reading PDF: {type(e).__name__}: {e}")
+                traceback.print_exc()
+                return ""
+        
+        # Handle DOCX files
+        elif ext == ".docx":
+            try:
+                doc = docx.Document(file_path)
+                return "\n".join([para.text for para in doc.paragraphs])
+            except Exception as e:
+                print(f"Error reading DOCX: {e}")
+                traceback.print_exc()
+                return ""
+        
+        # Handle TXT files
+        elif ext == ".txt":
+            try:
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    return f.read()
+            except UnicodeDecodeError:
+                # Try with a different encoding if UTF-8 fails
+                try:
+                    with open(file_path, 'r', encoding='latin-1') as f:
+                        return f.read()
+                except Exception as e:
+                    print(f"Error reading TXT: {e}")
+                    return ""
+            except Exception as e:
+                print(f"Error reading TXT: {e}")
+                return ""
+        
+        else:
+            print(f"Unsupported file extension: {ext}")
+            return ""
+        
     def process_csv_file(self, file_path):
         print("reached")
         # Check if file exists
@@ -339,18 +412,17 @@ class EssayEvaluationSystem:
                     fuzzy_key = f"fuzzy_{criterion}"
                     output_row[fuzzy_key] = evaluation_result.get(fuzzy_key, 0)
 
-                # Add multiple scaled scores
-                scale_names = {
-                    "1": "5_point_score",
-                    "2": "20_point_score",
-                    "3": "letter_grade",
-                    "4": "letter_grade_pm",
-                    "5": "100_point_score",
-                    "6": "50_point_score"
-                }
+                    scale_names = {
+                        "1": "5_point_score",
+                        "2": "20_point_score",
+                        "3": "letter_grade",
+                        "4": "letter_grade_pm",
+                        "5": "100_point_score",
+                        "6": "50_point_score"
+                    }
 
-                for scale_id, col_name in scale_names.items():
-                    output_row[col_name] = self.convert_to_scale(fuzzy_weighted_score, scale_id)
+                    selected_scale_col = scale_names.get(self.scale_choice, "raw_score")
+                    output_row[selected_scale_col] = self.convert_to_scale(fuzzy_weighted_score, self.scale_choice)
 
                 results.append(output_row)
 

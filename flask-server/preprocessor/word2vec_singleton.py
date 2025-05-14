@@ -1,6 +1,6 @@
+# word2vec_singleton.py
 import os
 import gensim
-import gdown
 
 class Word2VecSingleton:
     _instance = None
@@ -14,22 +14,15 @@ class Word2VecSingleton:
         return cls._instance
 
     def load_model(self):
-        model_dir = "flask-server/data/word2vec"
-        kv_path = os.path.join(model_dir, "word2vec_prepared.kv")
-        npy_path = kv_path + ".vectors.npy"
+        # Try both .kv and .npykv (gensim 4.3+)
+        kv_path = os.path.join("data", "word2vec", "word2vec_prepared.kv")
+        npykv_path = os.path.join("data", "word2vec", "word2vec_prepared.kv.vectors.npy")
 
-        os.makedirs(model_dir, exist_ok=True)
-
-        if not os.path.exists(kv_path) or not os.path.exists(npy_path):
-            print("Downloading .kv and .npy model files from Google Drive...")
-
-            gdown.download(f"https://drive.google.com/uc?id=1rDEb-O982wpqrLswUh5CJvZD7fwnYuuD", kv_path, quiet=False)
-            gdown.download(f"https://drive.google.com/uc?id=1m85AAmRRnoefyYQlyHMSGXd0bE1BI7fy", npy_path, quiet=False)
-
-            print("Download complete.")
-
-        print(f"Loading model from: {kv_path}")
-        self.model = gensim.models.KeyedVectors.load(kv_path)
+        if os.path.exists(kv_path) or os.path.exists(npykv_path):
+            print(f"Loading preprocessed Word2Vec model from: {kv_path}")
+            self.model = gensim.models.KeyedVectors.load(kv_path)
+        else:
+            raise FileNotFoundError(f"Neither {kv_path} nor its .npy companion found. Please ensure the model is prepared.")
 
     def get_model(self):
         return self.model
