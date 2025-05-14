@@ -103,7 +103,7 @@ const PopUp = ({
             <div className="modal-body">
               <p>Total weights must equal exactly 100%.</p>
               <p>Please adjust your rubric weights.</p>
-              <div className="checkbox-wrapper-13" style={{ marginTop: '5vh', marginBottom: '1vh', color: 'black', display: 'flex', alignItems: 'center' }}>
+              <div className="checkbox-wrapper-13" style={{ marginTop: '5vh', marginBottom: '1vh', color: 'gray', display: 'flex', alignItems: 'center' }}>
                 <input
                   id="dont-show-again-weight-warning"
                   type="checkbox"

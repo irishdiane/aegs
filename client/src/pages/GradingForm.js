@@ -542,7 +542,19 @@ const handleApplySettings = () => {
                 ))}
               </tbody>
             </table>
-            
+
+            <div className="scale">
+              <label for="scale_choice" style={{ color: 'white', fontWeight: 'bold' }}>Select Scoring Scale:</label>
+              <select id="scale_choice" name="scale_choice" required>
+                  <option value="1">5-point scale</option>
+                  <option value="2">20-point scale</option>
+                  <option value="3">Letter grades (A-E)</option>
+                  <option value="4">Letter grades with +/-</option>
+                  <option value="5" selected>100-point scale</option>
+                  <option value="6">50-point scale</option>
+              </select>
+            </div>
+
             <div className="weight-actions" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <button 
                 className="reset-weights" 
@@ -563,15 +575,6 @@ const handleApplySettings = () => {
             </button>
             </div>
           </div>
-          <label for="scale_choice">Select Scoring Scale:</label>
-          <select id="scale_choice" name="scale_choice" required>
-              <option value="1">5-point scale</option>
-              <option value="2">20-point scale</option>
-              <option value="3">Letter grades (A-E)</option>
-              <option value="4">Letter grades with +/-</option>
-              <option value="5" selected>100-point scale</option>
-              <option value="6">50-point scale</option>
-          </select>
 
         </div>
       </div>
