@@ -99,43 +99,7 @@ def evaluate_text():
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
     
-@app.route('/api/upload', methods=['POST'])
-def upload_file():
-    try:
-        # Check if file is present in request
-        if 'file' not in request.files:
-            return jsonify({'error': 'No file part'}), 400
-            
-        file = request.files['file']
-        
-        # Check if file is selected
-        if file.filename == '':
-            return jsonify({'error': 'No file selected'}), 400
-            
-        # Check if file is allowed
-        if not allowed_file(file.filename):
-            return jsonify({'error': f'File type not allowed. Please upload one of these types: {", ".join(ALLOWED_EXTENSIONS)}'}), 400
-        
-        filename = secure_filename(file.filename)
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        file.save(filepath)
-        
-        # Get file extension
-        ext = os.path.splitext(filename)[1].lower()
-        
-        # Process based on file type
-        if ext == '.csv':
-            # Handle CSV files - batch processing
-            return process_csv_file(filepath, request)
-        else:
-            # Handle document files (PDF, DOCX, TXT) - single essay processing
-            return process_document_file(filepath, request)
-            
-    except Exception as e:
-        traceback.print_exc()
-        return jsonify({'error': str(e)}), 500
-
-# Helper function to process CSV files (moved from the original upload_file function)
+# Helper function to process CSV files
 def process_csv_file(filepath, request):
     weights_json = request.form.get('weights', '{}')
     try:
@@ -191,7 +155,7 @@ def process_csv_file(filepath, request):
                     download_name=output_filename,
                     as_attachment=True)
 
-# Helper function to process document files (PDF, DOCX, TXT)
+# Helper function to process document files
 def process_document_file(filepath, request):
     try:
         # Create evaluation system
@@ -249,18 +213,60 @@ def process_document_file(filepath, request):
             if fuzzy_key in result and criterion in system.weights:
                 weighted_score += result.get(fuzzy_key, 0) * (system.weights[criterion] / 100)
         
-        # Format the response
+        # Format the response to match the format from /api/evaluate/text
         response = {
             'overall_score': weighted_score,
             'criteria_scores': {criterion: result.get(f'fuzzy_{criterion}', 0) for criterion in system.criteria},
             'scale_type': system.scale_choice,
             'final_score': system.convert_to_scale(weighted_score, system.scale_choice),
             'essay_text': essay_text,
-            'prompt': prompt
+            'prompt': prompt,
+            'weights': system.weights  # Add weights to match the format from evaluate/text
         }
         
         return jsonify(response)
         
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
+# The fixed upload_file route - removed the duplicate definition
+@app.route('/api/upload', methods=['POST'])
+def upload_file():
+    try:
+        # Check if file is present in request
+        if 'file' not in request.files:
+            return jsonify({'error': 'No file part'}), 400
+            
+        file = request.files['file']
+        
+        # Check if file is selected
+        if file.filename == '':
+            return jsonify({'error': 'No file selected'}), 400
+            
+        # Check if file is allowed
+        if not allowed_file(file.filename):
+            return jsonify({'error': f'File type not allowed. Please upload one of these types: {", ".join(ALLOWED_EXTENSIONS)}'}), 400
+        
+        filename = secure_filename(file.filename)
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(filepath)
+        
+        # Get file extension
+        ext = os.path.splitext(filename)[1].lower()
+        
+        # Get file type from form data if provided
+        file_type = request.form.get('fileType', '').lower()
+        
+        # Process based on file extension or explicitly provided file type
+        if ext == '.csv' or file_type == 'csv':
+            # Handle CSV files - batch processing (returns a downloadable file)
+            return process_csv_file(filepath, request)
+        else:
+            # Handle document files (PDF, DOCX, TXT) - single essay processing (returns JSON)
+            # This will now return a JSON response in the same format as /api/evaluate/text
+            return process_document_file(filepath, request)
+            
     except Exception as e:
         traceback.print_exc()
         return jsonify({'error': str(e)}), 500
@@ -277,55 +283,8 @@ def evaluate_file():
         file_path = os.path.join('uploads', uploaded_file.filename)
         uploaded_file.save(file_path)
 
-        system = EssayEvaluationSystem()
-        full_text = system.extract_text_from_file(file_path)
-
-        # Split paragraphs
-        paragraphs = [p.strip() for p in full_text.split('\n') if p.strip()]
-        if len(paragraphs) < 2:
-            return jsonify({'error': 'File must have at least two paragraphs: prompt and essay'}), 400
-
-        prompt = paragraphs[0]
-        essay_text = paragraphs[1]
-
-        # Rubric choice
-        rubric_choice = request.form.get('rubric_choice', '2')
-        system.rubric_choice = rubric_choice
-
-        if rubric_choice == "1":
-            system.criteria = ["ideas", "evidence", "organization", "language_tone"]
-        elif rubric_choice == "2":
-            system.criteria = ["ideas", "evidence", "language_tone", "grammar"]
-        else:
-            system.criteria = ["ideas", "evidence", "organization", "language_tone", "grammar", "mechanics", "vocabulary"]
-
-        # Weights
-        weights_raw = request.form.get('weights')
-        if weights_raw:
-            raw_weights = json.loads(weights_raw)
-            total = sum(raw_weights.values())
-            system.weights = {k: (v / total) * 100 for k, v in raw_weights.items() if k in system.criteria}
-        else:
-            weight_value = 100 / len(system.criteria)
-            system.weights = {criterion: weight_value for criterion in system.criteria}
-
-        # Scale
-        scale_choice = request.form.get('scale_choice', '5')
-        system.scale_choice = scale_choice
-
-        result = system.evaluate_essay(essay_text, prompt)
-
-        fuzzy_overall = result.get('fuzzy_overall', 0)
-        scaled_score = system.convert_to_scale(fuzzy_overall, scale_choice)
-
-        response = {
-            'overall_score': fuzzy_overall,
-            'criteria_scores': {c: result.get(f'fuzzy_{c}', 0) for c in system.criteria},
-            'scale_type': scale_choice,
-            'final_score': scaled_score
-        }
-
-        return jsonify(response)
+        # Reuse the main processing logic to ensure uniformity
+        return process_document_file(file_path, request)
 
     except Exception as e:
         traceback.print_exc()
