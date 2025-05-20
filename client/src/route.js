@@ -6,8 +6,8 @@ import MembersFetcher from "./App"; //
 import AboutUs from "./pages/AboutUs";
 import Rubrics from "./pages/Rubrics";
 import UserGuide from "./pages/UserGuide";
-import GradingResults from "./pages/GradingResults";
-import GradingForm from "./pages/GradingForm";
+import GradingResults from "./pages/GradingResults/index";
+import GradingForm from "./pages/GradingForm/index";
 
 export default function AppRouter() {
   return (
