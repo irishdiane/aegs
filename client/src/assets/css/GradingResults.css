@@ -225,3 +225,16 @@
   border-radius: 8px;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
 }
+
+.explanation-cell {
+  max-width: 250px;
+  min-width: 200px;
+}
+
+.explanation-wrapper {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  font-size: 0.9em;
+  line-height: 1.4;
+}

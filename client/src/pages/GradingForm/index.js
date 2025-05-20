@@ -20,7 +20,7 @@ function GradingForm() {
   const [prompt, setPrompt] = useState('');
   const [essayText, setEssayText] = useState('');
   const [uploadedFile, setUploadedFile] = useState(null);
-  const [selectedRubric, setSelectedRubric] = useState(1);
+  const [selectedRubric, setSelectedRubric] = useState(2);
   const [weights, setWeights] = useState({});
   const [isGrading, setIsGrading] = useState(false);
   const [gradingComplete, setGradingComplete] = useState(false);

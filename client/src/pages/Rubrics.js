@@ -36,7 +36,7 @@ const RubricsCarousel = () => {
         {
             pageTitle: "Rubric A",
             title: "Rubric A",
-            description: "ACT Writing Scoring Rubric",
+            description: "American College Test Writing Scoring Rubric",
             imagePath: `${process.env.PUBLIC_URL}/img/ActRubric.png`,
             pdfPath: `${process.env.PUBLIC_URL}/pdf/ACTWritingScoringRubric.pdf`, 
         },
