@@ -26,7 +26,7 @@ function GradingForm() {
   const [gradingComplete, setGradingComplete] = useState(false);
   const [uploadedFileName, setUploadedFileName] = useState(null);
   const [settingsApplied, setSettingsApplied] = useState(false);
-  const [customRubric] = useState([]);
+  const [customRubric, setRubrics] = useState([]);
   
   // Popup states
   const [fileUploadedMessage, setFileUploadedMessage] = useState(null);
@@ -165,6 +165,16 @@ function GradingForm() {
   const calculateTotalWeight = () => {
     return Object.values(weights).reduce((sum, w) => sum + (parseInt(w, 10) || 0), 0);
   };
+
+  const handleCustomCriterionNameChange = (criterionId, newName) => {
+  setRubrics(prevRubrics => ({
+    ...prevRubrics,
+    custom: prevRubrics.custom.map(c =>
+      c.id === criterionId ? { ...c, name: newName } : c
+    )
+  }));
+};
+
   
   // Validate inputs before submission
   const validateInputs = () => {

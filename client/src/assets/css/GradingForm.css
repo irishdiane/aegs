@@ -317,11 +317,11 @@
 
 .criteria-weights-container {
   background-color: #f8f9fa;
-  padding: 20px;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   display: table;
   overflow: hidden;
+  width: 100%;  
 }
 
 .criteria-weights table {
@@ -403,6 +403,7 @@
   color: white;
   cursor: pointer;
   transition: all 0.3s ease;
+  margin-top: 2vh;
 }
 
 .reset-weights:hover {
@@ -527,6 +528,11 @@
   display: flex;
   justify-content: center;
   margin-bottom: 20px;
+}
+
+.edit-button {
+  display: flex;
+  justify-content: right;
 }
 
 /* Popups and Overlay Styles */
