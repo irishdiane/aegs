@@ -111,7 +111,7 @@ export default function UserGuide() {
             <div className="user-guide-container">
                 <div className="align-left w-full"></div>
                 <div className="user-guide-content">
-                    <h1 className="user-guide-title">how to use eAssay</h1>
+                    <h1 className="user-guide-title">how to use the system</h1>
                     <p className="user-guide-subtitle">A COMPLETE GUIDE ON HOW TO NAVIGATE OUR APP</p>
 
                     <div className="main-content">
@@ -121,7 +121,7 @@ export default function UserGuide() {
                                 <img src="path/to/placeholder-image.png" alt="Video Placeholder" className="video-image" />
                                 <div className="play-button">▶</div>
                             </div>
-                            <p className="video-caption">play the video to learn how to use eAssay</p>
+                            <p className="video-caption">play the video to learn how to use system</p>
                         </div>
 
                         <div className="faq-section">

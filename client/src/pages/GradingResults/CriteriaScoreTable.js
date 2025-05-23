@@ -27,6 +27,7 @@ const CriteriaScoreTable = ({ criteriaScores, weights, scoreScale, onImageClick 
         <thead>
           <tr>
             <th>Criterion</th>
+            <th>Expand</th>
             <th>Score</th>
             <th>Weight</th>
             <th>Score Graphs</th>
