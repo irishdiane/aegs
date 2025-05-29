@@ -26,7 +26,7 @@ const SingleEssayResult = ({ results, scoreScale, onScaleChange }) => {
       </div>
       
       <div className="score-summary">
-        <h3>Final Score: {scaleScore(overallScore, scoreScale)}</h3>
+        <h3>Score: {scaleScore(overallScore, scoreScale)}</h3>
       </div>
 
       {results.criteria_scores && typeof results.criteria_scores === 'object' && (

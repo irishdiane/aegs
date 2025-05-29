@@ -8,7 +8,7 @@ const TextInput = ({ prompt, setPrompt, essayText, setEssayText, settingsApplied
         <input
           type="text"
           id="prompt"
-          maxLength={200} 
+          maxLength={500} 
           placeholder="Type or paste essay topic/theme here..."
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}

@@ -140,11 +140,11 @@ class EssayEvaluationSystem:
         
         if scale_choice == "1":  # 5-point scale
             raw = 1 + fuzzy_score * 4
-            return f"{raw:.1f}/5"
+            return f"{raw:.1f}"
             
         elif scale_choice == "2":  # 20-point scale
             raw = 1 + fuzzy_score * 19
-            return f"{raw:.1f}/20"
+            return f"{raw:.1f}"
             
         elif scale_choice == "3":  # Letter grades A-E
             if fuzzy_score >= 0.9:
@@ -188,11 +188,11 @@ class EssayEvaluationSystem:
                 
         elif scale_choice == "5":  # 100-point scale
             raw = fuzzy_score * 100
-            return f"{raw:.1f}/100"
+            return f"{raw:.1f}"
             
         elif scale_choice == "6":  # 50-point scale
             raw = fuzzy_score * 50
-            return f"{raw:.1f}/50"
+            return f"{raw:.1f}"
             
         else:
             return f"{fuzzy_score:.2f}"  # Default to raw fuzzy score
